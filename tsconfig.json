@@ -1,17 +1,22 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "declaration": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
   },
   "include": [
-    "src/index.ts"
+    "src/**/*"
   ],
 }
