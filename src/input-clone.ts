@@ -85,6 +85,7 @@ export class InputStyleClone {
 
   get inputElement() {
     const input = this.#inputRef.deref();
+
     if (!input) {
       // We *only* clean up if the input has been garbage collected. We don't want to expose some public `dispose` method
       // because all the instances share the same clone, so if one instance is disposed it would affect all the others.
@@ -93,12 +94,22 @@ export class InputStyleClone {
       this.#resizeObserver.disconnect();
       this.cloneElement?.remove();
     }
+
     return input;
   }
 
   get cloneElement() {
     const input = this.inputElement;
-    return input && clones.get(input);
+    const clone = input && clones.get(input);
+
+    if (clone) {
+      // Text content cannot be updated via event listener because change events are not triggered when value is set
+      // directly. Nor can we use a mutationobserver because value is a property, not an attribute. So we always set it
+      // on retrieval instead. This should be a low-cost operation so we don't need to worry too much about overdoing it.
+      clone.textContent = input.value;
+    }
+
+    return clone;
   }
 
   #updateStyles() {

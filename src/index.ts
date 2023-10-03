@@ -29,18 +29,12 @@ export class InputRange implements Pick<Range, keyof InputRange> {
 
     if (!cloneElement || !inputElement) return new DOMRectListLike();
 
-    cloneElement.textContent = inputElement.value;
-
     const textNode = cloneElement.childNodes[0];
-    if (!textNode) return new DOMRectListLike();
-
     const range = document.createRange();
-
     range.setStart(textNode, this.startOffset);
     range.setEnd(textNode, this.endOffset);
 
     const cloneRects = Array.from(range.getClientRects());
-
     const offsetRects = cloneRects.map((domRect) =>
       this.#offsetCloneRect(domRect)
     );
