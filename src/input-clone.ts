@@ -70,6 +70,7 @@ export class InputStyleClone {
 
     if (!existingClone) {
       const newClone = document.createElement("div");
+      newClone.setAttribute("aria-hidden", "true");
       document.body.appendChild(newClone);
 
       this.#updateStyles();
