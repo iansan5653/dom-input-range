@@ -15,14 +15,6 @@ export class InputRange implements Pick<Range, keyof InputRange> {
     this.#styleClone = new InputStyleClone(element);
   }
 
-  get #cloneElement() {
-    return this.#styleClone.cloneElement;
-  }
-
-  get #inputElement() {
-    return this.#inputRef.deref();
-  }
-
   getClientRects() {
     const cloneElement = this.#cloneElement;
     const inputElement = this.#inputElement;
@@ -40,6 +32,14 @@ export class InputRange implements Pick<Range, keyof InputRange> {
     );
 
     return new DOMRectListLike(...offsetRects);
+  }
+
+  get #cloneElement() {
+    return this.#styleClone.cloneElement;
+  }
+
+  get #inputElement() {
+    return this.#inputRef.deref();
   }
 
   /**
