@@ -1,7 +1,7 @@
 {
   "name": "textarea-range",
   "version": "0.0.1",
-  "description": "A `Range`-like API for input and textarea elements",
+  "description": "Range-like API for input and textarea elements",
   "scripts": {
     "build": "tsc",
     "format": "prettier . --write",
@@ -12,7 +12,10 @@
     "type": "git",
     "url": "git+https://github.com/iansan5653/textarea-range.git"
   },
-  "author": "iansan5653@gmail.com",
+  "author": {
+    "name": "Ian Sanders",
+    "url": "https://github.com/iansan5653"
+  },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/iansan5653/textarea-range/issues"
@@ -26,5 +29,15 @@
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   },
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/*.d.ts",
+    "dist/*.js"
+  ]
 }
