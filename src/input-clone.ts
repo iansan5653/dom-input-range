@@ -49,13 +49,24 @@ const clones = new WeakMap<InputElement, HTMLDivElement>();
 /**
  * Create a `div` that exactly matches an input element in all but position. Important: note that the style of the
  * clone will automatically update as the style of the input changes, but the text will not! This must be done manually.
+ *
+ * This is carefully optimized to:
+ *   - Allow the referenced element to get garbage collected on unmount
+ *   - Avoid creating any more elements than necessary
+ *   - Avoid applying any styles more often than necessary
+ * Done wrong, this can have significant performance implications.
  */
 export class InputStyleClone {
   readonly #mutationObserver = new MutationObserver(() => this.#updateStyles());
   readonly #resizeObserver = new ResizeObserver(() => this.#updateStyles());
+  readonly #inputRef;
 
-  constructor(readonly inputElement: InputElement) {
-    const existingClone = clones.get(inputElement);
+  constructor(input: InputElement) {
+    // careful not to keep around any class-level references to elements that would prevent them from getting
+    // garbage-collected after unmount
+    this.#inputRef = new WeakRef(input);
+
+    const existingClone = clones.get(input);
 
     if (!existingClone) {
       const newClone = document.createElement("div");
@@ -63,32 +74,41 @@ export class InputStyleClone {
 
       this.#updateStyles();
 
-      clones.set(inputElement, newClone);
+      clones.set(input, newClone);
 
-      this.#mutationObserver.observe(this.inputElement, {
+      this.#mutationObserver.observe(input, {
         attributeFilter: ["style"],
       });
-      this.#resizeObserver.observe(this.inputElement);
+      this.#resizeObserver.observe(input);
     }
   }
 
-  get cloneElement() {
-    // this way we don't accidentally keep around a reference to the clone in case some other one disposed it
-    return clones.get(this.inputElement);
+  get inputElement() {
+    const input = this.#inputRef.deref();
+    if (!input) {
+      // We *only* clean up if the input has been garbage collected. We don't want to expose some public `dispose` method
+      // because all the instances share the same clone, so if one instance is disposed it would affect all the others.
+      // For this to work it's critical to allow the input to get collected by not storing a class-level ref to it.
+      this.#mutationObserver.disconnect();
+      this.#resizeObserver.disconnect();
+      this.cloneElement?.remove();
+    }
+    return input;
   }
 
-  dispose() {
-    this.cloneElement?.remove();
-    this.#mutationObserver.disconnect();
-    this.#resizeObserver.disconnect();
-    clones.delete(this.inputElement);
+  get cloneElement() {
+    const input = this.inputElement;
+    return input && clones.get(input);
   }
 
   #updateStyles() {
-    if (!this.cloneElement) return; // no-op, clone has been unmounted
+    const clone = this.cloneElement;
+    const input = this.inputElement;
 
-    const style = this.cloneElement.style;
-    const inputStyle = window.getComputedStyle(this.inputElement);
+    if (!clone || !input) return;
+
+    const style = clone.style;
+    const inputStyle = window.getComputedStyle(input);
 
     // Default wrapping styles
     style.whiteSpace = "pre-wrap";
@@ -115,7 +135,7 @@ export class InputStyleClone {
         // instead of width in everything but Firefox. When we do that we also have to account for the border width.
         const width = isFirefox
           ? parseFloat(inputStyle.width) - totalBorderWidth
-          : this.inputElement.clientWidth + totalBorderWidth;
+          : input.clientWidth + totalBorderWidth;
         style.width = `${width}px`;
       } else {
         style[prop] = inputStyle[prop];
@@ -123,7 +143,7 @@ export class InputStyleClone {
 
     if (isFirefox) {
       // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
-      if (this.inputElement.scrollHeight > parseInt(inputStyle.height))
+      if (input.scrollHeight > parseInt(inputStyle.height))
         style.overflowY = "scroll";
     } else {
       style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'

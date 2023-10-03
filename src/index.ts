@@ -3,22 +3,35 @@ import {InputStyleClone} from "./input-clone.js";
 import {InputElement} from "./types.js";
 
 export class InputRange implements Pick<Range, keyof InputRange> {
-  readonly #cloneElement;
-  readonly #inputElement;
+  readonly #styleClone;
+  readonly #inputRef;
 
   constructor(
     element: InputElement,
     public startOffset: number,
     public endOffset = startOffset
   ) {
-    this.#inputElement = element;
-    this.#cloneElement = new InputStyleClone(element).cloneElement;
+    this.#inputRef = new WeakRef(element);
+    this.#styleClone = new InputStyleClone(element);
+  }
+
+  get #cloneElement() {
+    return this.#styleClone.cloneElement;
+  }
+
+  get #inputElement() {
+    return this.#inputRef.deref();
   }
 
   getClientRects() {
-    this.#cloneElement.textContent = this.#inputElement.value;
+    const cloneElement = this.#cloneElement;
+    const inputElement = this.#inputElement;
 
-    const textNode = this.#cloneElement.childNodes[0];
+    if (!cloneElement || !inputElement) return new DOMRectListLike();
+
+    cloneElement.textContent = inputElement.value;
+
+    const textNode = cloneElement.childNodes[0];
     if (!textNode) return new DOMRectListLike();
 
     const range = document.createRange();
@@ -39,13 +52,20 @@ export class InputRange implements Pick<Range, keyof InputRange> {
    * Return a copy of the passed rect adjusted to match the position of the input element.
    */
   #offsetCloneRect(rect: DOMRect) {
-    const cloneRect = this.#cloneElement.getBoundingClientRect();
-    const inputRect = this.#inputElement.getBoundingClientRect();
+    const cloneElement = this.#cloneElement;
+    const inputElement = this.#inputElement;
+    if (!cloneElement || !inputElement)
+      throw new Error(
+        "Failed to obtain elements to offset rect. Ensure that the function was not called after unmount."
+      );
+
+    const cloneRect = cloneElement.getBoundingClientRect();
+    const inputRect = inputElement.getBoundingClientRect();
 
     // The div is not scrollable so it does not have scroll adjustment built in
     const inputScroll = {
-      top: this.#inputElement.scrollTop,
-      left: this.#inputElement.scrollLeft,
+      top: inputElement.scrollTop,
+      left: inputElement.scrollLeft,
     };
 
     return new DOMRect(
