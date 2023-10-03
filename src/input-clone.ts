@@ -44,35 +44,50 @@ const propertiesToCopy = [
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
+const clones = new WeakMap<InputElement, HTMLDivElement>();
+
 /**
  * Create a `div` that exactly matches an input element in all but position. Important: note that the style of the
  * clone will automatically update as the style of the input changes, but the text will not! This must be done manually.
  */
 export class InputStyleClone {
-  readonly cloneElement = document.createElement("div");
-
   readonly #mutationObserver = new MutationObserver(() => this.#updateStyles());
   readonly #resizeObserver = new ResizeObserver(() => this.#updateStyles());
 
   constructor(readonly inputElement: InputElement) {
-    document.body.appendChild(this.cloneElement);
+    const existingClone = clones.get(inputElement);
 
-    this.#updateStyles();
+    if (!existingClone) {
+      const newClone = document.createElement("div");
+      document.body.appendChild(newClone);
 
-    this.#mutationObserver.observe(this.inputElement, {
-      attributeFilter: ["style"],
-    });
-    this.#resizeObserver.observe(this.inputElement);
+      this.#updateStyles();
+
+      clones.set(inputElement, newClone);
+
+      this.#mutationObserver.observe(this.inputElement, {
+        attributeFilter: ["style"],
+      });
+      this.#resizeObserver.observe(this.inputElement);
+    }
+  }
+
+  get cloneElement() {
+    // this way we don't accidentally keep around a reference to the clone in case some other one disposed it
+    return clones.get(this.inputElement);
   }
 
   dispose() {
     this.cloneElement?.remove();
     this.#mutationObserver.disconnect();
     this.#resizeObserver.disconnect();
+    clones.delete(this.inputElement);
   }
 
   #updateStyles() {
-    const style = this.cloneElement?.style;
+    if (!this.cloneElement) return; // no-op, clone has been unmounted
+
+    const style = this.cloneElement.style;
     const inputStyle = window.getComputedStyle(this.inputElement);
 
     // Default wrapping styles
