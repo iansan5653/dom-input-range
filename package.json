@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "description": "A `Range`-like API for input and textarea elements",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "format": "prettier . --write",
+    "lint": "eslint",
+    "check-formatting": "prettier . --check"
   },
   "repository": {
     "type": "git",
