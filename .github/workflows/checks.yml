@@ -1,0 +1,28 @@
+name: Check code
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint and typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+      - uses: actions/setup-node@72c43c2d8fa01b0e1ca5fc3f8cb258c8d8bd286d
+      - run: npm ci
+
+      - run: npm run lint
+
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608
+      - uses: actions/setup-node@72c43c2d8fa01b0e1ca5fc3f8cb258c8d8bd286d
+      - run: npm ci
+
+      - run: npm run check-formatting
