@@ -1,0 +1,17 @@
+{
+  "name": "textarea-range",
+  "version": "0.0.1",
+  "description": "A `Range`-like API for input and textarea elements",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iansan5653/textarea-range.git"
+  },
+  "author": "iansan5653@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iansan5653/textarea-range/issues"
+  },
+  "homepage": "https://github.com/iansan5653/textarea-range#readme"
+}
