@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "A `Range`-like API for input and textarea elements",
   "scripts": {
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -13,5 +14,9 @@
   "bugs": {
     "url": "https://github.com/iansan5653/textarea-range/issues"
   },
-  "homepage": "https://github.com/iansan5653/textarea-range#readme"
+  "homepage": "https://github.com/iansan5653/textarea-range#readme",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "type": "module"
 }
