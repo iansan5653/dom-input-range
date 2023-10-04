@@ -16,15 +16,9 @@ export class InputRange implements Pick<Range, keyof InputRange> {
   }
 
   getClientRects() {
-    const cloneElement = this.#cloneElement;
-    const inputElement = this.#inputElement;
+    const range = this.#createCloneRange();
 
-    if (!cloneElement || !inputElement) return new DOMRectListLike();
-
-    const textNode = cloneElement.childNodes[0];
-    const range = document.createRange();
-    range.setStart(textNode, this.startOffset);
-    range.setEnd(textNode, this.endOffset);
+    if (!range) return new DOMRectListLike();
 
     const cloneRects = Array.from(range.getClientRects());
     const offsetRects = cloneRects.map((domRect) =>
@@ -47,6 +41,18 @@ export class InputRange implements Pick<Range, keyof InputRange> {
 
   get #inputElement() {
     return this.#inputRef.deref();
+  }
+
+  #createCloneRange() {
+    const cloneElement = this.#cloneElement;
+    if (!cloneElement) return null;
+
+    const textNode = cloneElement.childNodes[0];
+    const range = document.createRange();
+    range.setStart(textNode, this.startOffset);
+    range.setEnd(textNode, this.endOffset);
+
+    return range;
   }
 
   /**
