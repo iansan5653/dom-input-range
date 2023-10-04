@@ -65,11 +65,11 @@ export class InputRange implements ReadonlyTextRange {
   // This could just be a regular setter, but the DOM Range API has `startOffset` and `endOffset` as readonly properties
   // so this better aligns with expectations.
   setStartOffset(offset: number) {
-    this.#startOffset = offset;
+    this.#startOffset = this.#clampOffset(offset);
   }
 
   setEndOffset(offset: number) {
-    this.#endOffset = offset;
+    this.#endOffset = this.#clampOffset(offset);
   }
 
   collapse(toStart = false) {
@@ -118,6 +118,10 @@ export class InputRange implements ReadonlyTextRange {
 
   get #cloneElement() {
     return this.#styleClone.cloneElement;
+  }
+
+  #clampOffset(offset: number) {
+    return Math.max(0, Math.min(offset, this.#inputElement.value.length));
   }
 
   #createCloneRange() {
