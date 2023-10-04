@@ -1,5 +1,5 @@
 import {DOMRectListLike} from "./dom-rect-list-like.js";
-import {InputStyleClone} from "./input-clone.js";
+import {InputElement, InputStyleClone} from "./input-clone.js";
 
 /**
  * A fragment of a document that can contain only pieces of a single text node. Does not implement `Range` methods
@@ -22,9 +22,6 @@ interface ReadonlyTextRange
   /** The range only operates on a single Text node, so only the offsets can be set. */
   setEndOffset(offset: number): void;
 }
-
-/** Supported targets for `InputRange`. */
-type InputElement = HTMLTextAreaElement;
 
 export class InputRange implements ReadonlyTextRange {
   #styleClone: InputStyleClone;
