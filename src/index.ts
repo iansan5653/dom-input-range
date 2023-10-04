@@ -47,14 +47,17 @@ export class InputRange implements ReadonlyTextRange {
     return this.startOffset === this.endOffset;
   }
 
+  /** Always returns the containing input element. */
   get commonAncestorContainer() {
     return this.#inputElement;
   }
 
+  /** Always returns the containing input element. */
   get endContainer() {
     return this.#inputElement;
   }
 
+  /** Always returns the containing input element. */
   get startContainer() {
     return this.#inputElement;
   }
