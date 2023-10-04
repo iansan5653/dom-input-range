@@ -44,26 +44,22 @@ const propertiesToCopy = [
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
-/**
- * Create a `div` that exactly matches an input element in all but position. Important: note that the style of the
- * clone will automatically update as the style of the input changes, but the text will not! This must be done manually.
- *
- * This is carefully optimized to:
- *   - Allow the referenced element to get garbage collected on unmount
- *   - Avoid creating any more elements than necessary
- *   - Avoid applying any styles more often than necessary
- * Done wrong, this can have significant performance implications.
- */
+/** Create a `div` that exactly matches an input element in all but position. */
 export class InputStyleClone {
   #mutationObserver = new MutationObserver(() => this.#updateStyles());
   #resizeObserver = new ResizeObserver(() => this.#updateStyles());
 
+  // This class is unique in that it will prevent itself from getting garbage collected because of the subscribed
+  // observers (if never detached). Because of this, we want to avoid preventing the existence of this class from also
+  // preventing the garbage collection of the associated input. This also allows us to automatically detach if the
+  // input gets collected.
   #inputRef: WeakRef<InputElement>;
-  #cloneElement: HTMLDivElement | null = null;
+
+  // There's no need to store the div in a weakref because once we auto-detach based on the input, this will get
+  // released as the class itself gets garbage collected.
+  #cloneElement: HTMLDivElement;
 
   constructor(input: InputElement) {
-    // careful not to keep around any class-level references to elements that would prevent them from getting
-    // garbage-collected after unmount
     this.#inputRef = new WeakRef(input);
 
     const clone = document.createElement("div");
@@ -81,10 +77,10 @@ export class InputStyleClone {
 
   get cloneElement() {
     const inputElement = this.#inputElement;
-    if (this.#cloneElement && inputElement) {
+    if (inputElement) {
       // Text content cannot be updated via event listener because change events are not triggered when value is set
-      // directly. Nor can we use a mutationobserver because value is a property, not an attribute. So we always set it
-      // on retrieval instead. This should be a low-cost operation so we don't need to worry too much about overdoing it.
+      // directly. Nor can we use MutationObserver because value is a property, not an attribute. So we always set it
+      // on retrieval instead. This is a low-cost operation so we don't need to worry too much about overdoing it.
       this.#cloneElement.textContent = inputElement.value;
     }
 
@@ -95,7 +91,6 @@ export class InputStyleClone {
     this.#mutationObserver.disconnect();
     this.#resizeObserver.disconnect();
     this.#cloneElement?.remove();
-    this.#cloneElement = null;
   }
 
   // --- private ---
@@ -108,7 +103,7 @@ export class InputStyleClone {
     const clone = this.#cloneElement;
     const input = this.#inputElement;
 
-    if (!clone || !input) return;
+    if (!input) return;
 
     const style = clone.style;
     const inputStyle = window.getComputedStyle(input);
