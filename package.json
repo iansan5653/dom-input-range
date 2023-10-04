@@ -1,6 +1,6 @@
 {
   "name": "textarea-range",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Range-like API for input and textarea elements",
   "scripts": {
     "prepare": "npm run build",
