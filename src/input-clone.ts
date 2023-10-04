@@ -44,8 +44,6 @@ const propertiesToCopy = [
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
-const clones = new WeakMap<InputElement, HTMLDivElement>();
-
 /**
  * Create a `div` that exactly matches an input element in all but position. Important: note that the style of the
  * clone will automatically update as the style of the input changes, but the text will not! This must be done manually.
@@ -59,63 +57,56 @@ const clones = new WeakMap<InputElement, HTMLDivElement>();
 export class InputStyleClone {
   readonly #mutationObserver = new MutationObserver(() => this.#updateStyles());
   readonly #resizeObserver = new ResizeObserver(() => this.#updateStyles());
+
   readonly #inputRef;
+  #cloneElement: HTMLDivElement | null = null;
 
   constructor(input: InputElement) {
     // careful not to keep around any class-level references to elements that would prevent them from getting
     // garbage-collected after unmount
     this.#inputRef = new WeakRef(input);
 
-    const existingClone = clones.get(input);
+    const clone = document.createElement("div");
+    clone.setAttribute("aria-hidden", "true");
+    document.body.appendChild(clone);
+    this.#cloneElement = clone;
 
-    if (!existingClone) {
-      const newClone = document.createElement("div");
-      newClone.setAttribute("aria-hidden", "true");
-      document.body.appendChild(newClone);
+    this.#updateStyles();
 
-      this.#updateStyles();
-
-      clones.set(input, newClone);
-
-      this.#mutationObserver.observe(input, {
-        attributeFilter: ["style"],
-      });
-      this.#resizeObserver.observe(input);
-    }
-  }
-
-  get inputElement() {
-    const input = this.#inputRef.deref();
-
-    if (!input) {
-      // We *only* clean up if the input has been garbage collected. We don't want to expose some public `dispose` method
-      // because all the instances share the same clone, so if one instance is disposed it would affect all the others.
-      // For this to work it's critical to allow the input to get collected by not storing a class-level ref to it.
-      this.#mutationObserver.disconnect();
-      this.#resizeObserver.disconnect();
-      this.cloneElement?.remove();
-    }
-
-    return input;
+    this.#mutationObserver.observe(input, {
+      attributeFilter: ["style"],
+    });
+    this.#resizeObserver.observe(input);
   }
 
   get cloneElement() {
-    const input = this.inputElement;
-    const clone = input && clones.get(input);
-
-    if (clone) {
+    const inputElement = this.#inputElement;
+    if (this.#cloneElement && inputElement) {
       // Text content cannot be updated via event listener because change events are not triggered when value is set
       // directly. Nor can we use a mutationobserver because value is a property, not an attribute. So we always set it
       // on retrieval instead. This should be a low-cost operation so we don't need to worry too much about overdoing it.
-      clone.textContent = input.value;
+      this.#cloneElement.textContent = inputElement.value;
     }
 
-    return clone;
+    return this.#cloneElement;
+  }
+
+  dispose() {
+    this.#mutationObserver.disconnect();
+    this.#resizeObserver.disconnect();
+    this.#cloneElement?.remove();
+    this.#cloneElement = null;
+  }
+
+  // --- private ---
+
+  get #inputElement() {
+    return this.#inputRef.deref();
   }
 
   #updateStyles() {
-    const clone = this.cloneElement;
-    const input = this.inputElement;
+    const clone = this.#cloneElement;
+    const input = this.#inputElement;
 
     if (!clone || !input) return;
 
