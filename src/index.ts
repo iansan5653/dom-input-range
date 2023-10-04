@@ -70,8 +70,8 @@ export class InputRange implements Pick<Range, keyof InputRange> {
     };
 
     return new DOMRect(
-      rect.left - cloneRect.top + inputRect.top - inputScroll.top,
-      rect.top - cloneRect.left + inputRect.left - inputScroll.left,
+      rect.left - cloneRect.left + inputRect.left - inputScroll.left,
+      rect.top - cloneRect.top + inputRect.top - inputScroll.top,
       rect.width,
       rect.height
     );
