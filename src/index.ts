@@ -5,7 +5,7 @@ import { InputElement, InputStyleClone } from "./input-style-clone.js";
  * A fragment of a document that can contain only pieces of a single text node. Does not implement `Range` methods
  * that operate with other nodes or directly mutate the contents of the `Range`.
  */
-interface ReadonlyTextRange
+export interface ReadonlyTextRange
   extends AbstractRange,
     Pick<
       Range,
@@ -41,46 +41,46 @@ export class InputRange implements ReadonlyTextRange {
   }
 
   /** Create a new range from the current user selection. */
-  static fromSelection(input: InputElement) {
+  static fromSelection(input: InputElement): InputRange {
     const { selectionStart, selectionEnd } = input;
     return new InputRange(input, selectionStart, selectionEnd);
   }
 
   /** Returns true if the start is equal to the end of this range. */
-  get collapsed() {
+  get collapsed(): boolean {
     return this.startOffset === this.endOffset;
   }
 
   /** Always returns the containing input element. */
-  get commonAncestorContainer() {
+  get commonAncestorContainer(): InputElement {
     return this.#inputElement;
   }
 
   /** Always returns the containing input element. */
-  get endContainer() {
+  get endContainer(): InputElement {
     return this.#inputElement;
   }
 
   /** Always returns the containing input element. */
-  get startContainer() {
+  get startContainer(): InputElement {
     return this.#inputElement;
   }
 
-  get startOffset() {
+  get startOffset(): number {
     return this.#startOffset;
   }
 
-  get endOffset() {
+  get endOffset(): number {
     return this.#endOffset;
   }
 
   /** Update the inclusive start offset. Will be adjusted to fit within the content size. */
-  setStartOffset(offset: number) {
+  setStartOffset(offset: number): void {
     this.#startOffset = this.#clampOffset(offset);
   }
 
   /** Update the exclusive end offset. Will be adjusted to fit within the content size. */
-  setEndOffset(offset: number) {
+  setEndOffset(offset: number): void {
     this.#endOffset = this.#clampOffset(offset);
   }
 
@@ -88,23 +88,23 @@ export class InputRange implements ReadonlyTextRange {
    * Collapse this range to one side.
    * @param toStart If `true`, will collapse to the start side. Otherwise, will collapse to the end.
    */
-  collapse(toStart = false) {
+  collapse(toStart = false): void {
     if (toStart) this.setEndOffset(this.startOffset);
     else this.setStartOffset(this.endOffset);
   }
 
   /** Returns a `DocumentFragment` containing a new `Text` node containing the content in the range. */
-  cloneContents() {
+  cloneContents(): DocumentFragment {
     return this.#createCloneRange().cloneContents();
   }
 
   /** Create a copy of this range. */
-  cloneRange() {
+  cloneRange(): InputRange {
     return new InputRange(this.#inputElement, this.startOffset, this.endOffset);
   }
 
   /** Obtain one rect that contains the entire contents of the range. */
-  getBoundingClientRect() {
+  getBoundingClientRect(): DOMRect {
     const range = this.#createCloneRange();
 
     const cloneRect = range.getBoundingClientRect();
@@ -114,7 +114,7 @@ export class InputRange implements ReadonlyTextRange {
   }
 
   /** Obtain the rects that contain contents of this range. There may be multiple if the range spans multiple lines. */
-  getClientRects() {
+  getClientRects(): DOMRectList {
     const range = this.#createCloneRange();
 
     const cloneRects = Array.from(range.getClientRects());
@@ -126,7 +126,7 @@ export class InputRange implements ReadonlyTextRange {
   }
 
   /** Get the contents of the range as a string. */
-  toString() {
+  toString(): string {
     return this.#createCloneRange.toString();
   }
 

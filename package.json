@@ -8,7 +8,7 @@
     "format": "prettier . --write",
     "lint": "eslint",
     "check-formatting": "prettier . --check",
-    "build-docs": "typedoc src/index.ts --sort static-first"
+    "build-docs": "typedoc src/index.ts --sort static-first --excludePrivate"
   },
   "repository": {
     "type": "git",
