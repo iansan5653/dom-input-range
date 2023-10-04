@@ -102,7 +102,7 @@ export class InputRange implements ReadonlyTextRange {
     const range = this.#createCloneRange();
 
     const cloneRect = range.getBoundingClientRect();
-    const offsetRect = this.#offsetCloneRect(cloneRect);
+    const offsetRect = this.#styleClone.offsetCloneRect(cloneRect);
 
     return offsetRect;
   }
@@ -112,7 +112,7 @@ export class InputRange implements ReadonlyTextRange {
 
     const cloneRects = Array.from(range.getClientRects());
     const offsetRects = cloneRects.map((domRect) =>
-      this.#offsetCloneRect(domRect)
+      this.#styleClone.offsetCloneRect(domRect)
     );
 
     return new DOMRectListLike(...offsetRects);
@@ -139,29 +139,5 @@ export class InputRange implements ReadonlyTextRange {
     range.setEnd(textNode, this.endOffset);
 
     return range;
-  }
-
-  /**
-   * Return a copy of the passed rect, adjusted to match the position of the input element.
-   */
-  #offsetCloneRect(rect: DOMRect) {
-    const cloneElement = this.#cloneElement;
-    const inputElement = this.#inputElement;
-
-    const cloneRect = cloneElement.getBoundingClientRect();
-    const inputRect = inputElement.getBoundingClientRect();
-
-    // The div is not scrollable so it does not have scroll adjustment built in
-    const inputScroll = {
-      top: inputElement.scrollTop,
-      left: inputElement.scrollLeft,
-    };
-
-    return new DOMRect(
-      rect.left - cloneRect.left + inputRect.left - inputScroll.left,
-      rect.top - cloneRect.top + inputRect.top - inputScroll.top,
-      rect.width,
-      rect.height
-    );
   }
 }
