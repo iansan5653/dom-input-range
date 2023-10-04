@@ -2,7 +2,7 @@
 
 The [`Range`](https://developer.mozilla.org/en-US/docs/Web/API/Range) web API provides access to a slice of a document, including some very useful functions for obtaining the coordinates of the contents of that slice (`getClientRects` and `getBoundingClientRect`).
 
-These *could* be extremely powerful when used in tandem with form input fields as they can allow for annotating text without having to wrap it in a `span`. Unfortunately, the contents of `<input>` and `<textarea>` elements remain inaccessible to this API because they are not rendered like regular `Text` nodes.
+These _could_ be extremely powerful when used in tandem with form input fields as they can allow for annotating text without having to wrap it in a `span`. Unfortunately, the contents of `<input>` and `<textarea>` elements remain inaccessible to this API because they are not rendered like regular `Text` nodes.
 
 This library aims to provide a solution to that through a new `InputRange` class that implements a subset of the `Range` API.
 
@@ -17,7 +17,7 @@ npm install dom-input-range
 Usage is straightforward. For example, to get the coordinates of the bounding box around the first ten characters of a `textarea`:
 
 ```js
-import {InputRange} from "dom-input-range";
+import { InputRange } from "dom-input-range";
 
 new InputRange(element, 0, 10).getBoundingClientRect();
 ```
@@ -28,7 +28,7 @@ new InputRange(element, 0, 10).getBoundingClientRect();
 Or obtain all rects for the current selection (can include more than one rect if the selection spans multiple lines):
 
 ```js
-import {InputRange} from "dom-input-range";
+import { InputRange } from "dom-input-range";
 
 InputRange.fromSelection(element).getClientRects();
 ```

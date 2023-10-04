@@ -11,13 +11,7 @@
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "lib": [
-      "es2022",
-      "dom",
-      "dom.iterable"
-    ],
+    "lib": ["es2022", "dom", "dom.iterable"]
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"]
 }
