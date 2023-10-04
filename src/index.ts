@@ -1,20 +1,47 @@
 import {DOMRectListLike} from "./dom-rect-list-like.js";
 import {InputStyleClone} from "./input-clone.js";
-import {InputElement} from "./types.js";
 
-export class InputRange
-  implements Omit<Pick<Range, keyof InputRange>, "cloneRange">
-{
+/**
+ * A fragment of a document that can contain only pieces of a single text node. Does not implement `Range` methods
+ * that operate with other nodes or directly mutate the contents of the `Range`.
+ */
+interface ReadonlyTextRange
+  extends AbstractRange,
+    Pick<
+      Range,
+      | "commonAncestorContainer"
+      | "cloneContents"
+      | "collapse"
+      | "detach"
+      | "getBoundingClientRect"
+      | "getClientRects"
+      | "toString"
+    > {
+  /** The range only operates on a single Text node, so only the offsets can be set. */
+  setStartOffset(offset: number): void;
+  /** The range only operates on a single Text node, so only the offsets can be set. */
+  setEndOffset(offset: number): void;
+}
+
+/** Supported targets for `InputRange`. */
+type InputElement = HTMLTextAreaElement;
+
+export class InputRange implements ReadonlyTextRange {
   #styleClone: InputStyleClone;
   #inputElement: InputElement;
 
+  #startOffset: number;
+  #endOffset: number;
+
   constructor(
     element: InputElement,
-    public startOffset: number,
-    public endOffset = startOffset
+    startOffset: number,
+    endOffset = startOffset
   ) {
     this.#inputElement = element;
     this.#styleClone = new InputStyleClone(element);
+    this.#startOffset = startOffset;
+    this.#endOffset = endOffset;
   }
 
   get collapsed() {
@@ -33,12 +60,27 @@ export class InputRange
     return this.#inputElement;
   }
 
+  get startOffset() {
+    return this.#startOffset;
+  }
+
+  get endOffset() {
+    return this.#endOffset;
+  }
+
+  // This could just be a regular setter, but the DOM Range API has `startOffset` and `endOffset` as readonly properties
+  // so this better aligns with expectations.
+  setStartOffset(offset: number) {
+    this.#startOffset = offset;
+  }
+
+  setEndOffset(offset: number) {
+    this.#endOffset = offset;
+  }
+
   collapse(toStart = false) {
-    if (toStart) {
-      this.endOffset = this.startOffset;
-    } else {
-      this.startOffset = this.endOffset;
-    }
+    if (toStart) this.setEndOffset(this.startOffset);
+    else this.setStartOffset(this.endOffset);
   }
 
   /** Always returns a `Text` node containing the content in the range. */
