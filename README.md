@@ -4,7 +4,7 @@ The [`Range`](https://developer.mozilla.org/en-US/docs/Web/API/Range) web API pr
 
 These _could_ be extremely powerful when used in tandem with form input fields as they can allow for annotating text without having to wrap it in a `span`. Unfortunately, the contents of `<input>` and `<textarea>` elements remain inaccessible to this API because they are not rendered like regular `Text` nodes.
 
-This library aims to provide a solution to that through a new [`InputRange`](https://iansan5653.github.io/dom-input-range/) class that implements a subset of the `Range` API.
+This library aims to provide a solution to that through a new [`InputRange`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html) class that implements a subset of the `Range` API.
 
 > [!IMPORTANT]  
 > Support for `<input>` elements is not yet implemented, but will be added in an upcoming release.
@@ -17,7 +17,7 @@ First, install the package:
 npm install dom-input-range
 ```
 
-A new `InputRange` can be constructed with an element and offsets. For example, to get the coordinates of the bounding box around the first ten characters of a `textarea`:
+A new `InputRange` can be [constructed](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#constructor) with an element and offsets. For example, to get the coordinates of the bounding box around the first ten characters of a `textarea`:
 
 ```js
 import { InputRange } from "dom-input-range";
@@ -25,13 +25,15 @@ import { InputRange } from "dom-input-range";
 new InputRange(element, 0, 10).getBoundingClientRect();
 ```
 
-There is also a convenience `fromSelection` method for creating a range from the active selection:
+There is also a convenient [`fromSelection`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#fromSelection) method for creating a range from the active selection:
 
 ```js
 import { InputRange } from "dom-input-range";
 
 InputRange.fromSelection(element).getClientRects();
 ```
+
+For the full api, see the docs for [`InputRange`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html).
 
 ## Available features and limitations
 
