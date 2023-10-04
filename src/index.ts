@@ -121,7 +121,7 @@ export class InputRange implements ReadonlyTextRange {
   // --- private ---
 
   get #styleClone() {
-    return InputRange.getStyleCloneFor(this.#inputElement);
+    return InputRange.#getStyleCloneFor(this.#inputElement);
   }
 
   get #cloneElement() {
@@ -161,7 +161,7 @@ export class InputRange implements ReadonlyTextRange {
    * important that we always call this method instead of storing a reference to the clone. The clone is completely
    * private so we don't need to worry about consumers doing this incorrectly.
    */
-  static getStyleCloneFor(input: InputElement) {
+  static #getStyleCloneFor(input: InputElement) {
     const existing = this.#cloneRegistry.get(input);
 
     let instance: InputStyleClone;
