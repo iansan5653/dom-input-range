@@ -30,7 +30,7 @@ export class InputRange implements ReadonlyTextRange {
 
   constructor(
     element: InputElement,
-    startOffset: number,
+    startOffset = 0,
     endOffset = startOffset,
   ) {
     this.#inputElement = element;
