@@ -12,19 +12,17 @@ interface ReadonlyTextRange
       | "commonAncestorContainer"
       | "cloneContents"
       | "collapse"
-      | "detach"
       | "getBoundingClientRect"
       | "getClientRects"
       | "toString"
     > {
-  /** The range only operates on a single Text node, so only the offsets can be set. */
+  /** The range only operates on a single `Text` node, so only the offsets can be set. */
   setStartOffset(offset: number): void;
-  /** The range only operates on a single Text node, so only the offsets can be set. */
+  /** The range only operates on a single `Text` node, so only the offsets can be set. */
   setEndOffset(offset: number): void;
 }
 
 export class InputRange implements ReadonlyTextRange {
-  #styleClone: InputStyleClone;
   #inputElement: InputElement;
 
   #startOffset: number;
@@ -36,7 +34,6 @@ export class InputRange implements ReadonlyTextRange {
     endOffset = startOffset
   ) {
     this.#inputElement = element;
-    this.#styleClone = new InputStyleClone(element);
     this.#startOffset = startOffset;
     this.#endOffset = endOffset;
   }
@@ -89,15 +86,6 @@ export class InputRange implements ReadonlyTextRange {
     return new InputRange(this.#inputElement, this.startOffset, this.endOffset);
   }
 
-  /**
-   * In `InputRange` is important to detach to preserve performance! If not explicitly detached, the range will remain
-   * attached until the input is unmounted, which could be the lifetime of the page. This would cause a memory leak if
-   * more `InputRange`s continue to be constructed without cleaning up existing ones.
-   */
-  detach() {
-    this.#styleClone.detach();
-  }
-
   getBoundingClientRect() {
     const range = this.#createCloneRange();
 
@@ -124,6 +112,10 @@ export class InputRange implements ReadonlyTextRange {
 
   // --- private ---
 
+  get #styleClone() {
+    return InputRange.getStyleCloneFor(this.#inputElement);
+  }
+
   get #cloneElement() {
     return this.#styleClone.cloneElement;
   }
@@ -141,5 +133,42 @@ export class InputRange implements ReadonlyTextRange {
     }
 
     return range;
+  }
+
+  // --- static ---
+
+  static #CLONE_USAGE_TIMEOUT = 5_000;
+
+  static #cloneRegistry = new WeakMap<
+    InputElement,
+    {instance: InputStyleClone; removalTimeout: number}
+  >();
+
+  /**
+   * Get the clone for an input, reusing an existing one if possible. Existing clones are deleted if not used, so it's
+   * important that we always call this method instead of storing a reference to the clone. The clone is completely
+   * private so we don't need to worry about consumers doing this incorrectly.
+   */
+  static getStyleCloneFor(input: InputElement) {
+    const existing = this.#cloneRegistry.get(input);
+
+    let instance: InputStyleClone;
+    if (existing) {
+      clearTimeout(existing.removalTimeout);
+      instance = existing.instance;
+    } else {
+      instance = new InputStyleClone(input);
+    }
+
+    this.#cloneRegistry.set(input, {
+      instance,
+      removalTimeout: setTimeout(() => {
+        // Delete from map before detaching to avoid race conditions where another call grabs the clone we are detaching
+        this.#cloneRegistry.delete(input);
+        instance.detach();
+      }, InputRange.#CLONE_USAGE_TIMEOUT),
+    });
+
+    return instance;
   }
 }

@@ -15,6 +15,8 @@ export class InputStyleClone {
   // released as the class itself gets garbage collected.
   #cloneElement: HTMLDivElement;
 
+  isDetached = false;
+
   constructor(input: InputElement) {
     this.#inputRef = new WeakRef(input);
 
@@ -47,6 +49,7 @@ export class InputStyleClone {
     this.#mutationObserver.disconnect();
     this.#resizeObserver.disconnect();
     this.#cloneElement?.remove();
+    this.isDetached = true;
   }
 
   /**
