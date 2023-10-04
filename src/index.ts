@@ -38,6 +38,11 @@ export class InputRange implements ReadonlyTextRange {
     this.#endOffset = endOffset;
   }
 
+  static fromSelection(input: InputElement) {
+    const {selectionStart, selectionEnd} = input;
+    return new InputRange(input, selectionStart, selectionEnd);
+  }
+
   get collapsed() {
     return this.startOffset === this.endOffset;
   }
