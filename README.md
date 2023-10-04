@@ -1,4 +1,4 @@
-# `dom-input-range`
+# `InputRange`
 
 The [`Range`](https://developer.mozilla.org/en-US/docs/Web/API/Range) web API provides access to a slice of a document, including some very useful functions for obtaining the coordinates of the contents of that slice (`getClientRects` and `getBoundingClientRect`).
 
