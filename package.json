@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Range-like API for input and textarea elements",
   "scripts": {
+    "prepublish": "npm run build",
     "build": "tsc",
     "format": "prettier . --write",
     "lint": "eslint",
