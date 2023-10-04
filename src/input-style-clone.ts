@@ -21,7 +21,9 @@ export class InputStyleClone {
     this.#inputRef = new WeakRef(input);
 
     const clone = document.createElement("div");
-    clone.setAttribute("aria-hidden", "true");
+    // Important not to use display:none which would not render the content
+    clone.style.visibility = "hidden";
+    clone.style.position = "absolute";
     document.body.appendChild(clone);
     this.#cloneElement = clone;
 
@@ -98,11 +100,6 @@ export class InputStyleClone {
     // Default wrapping styles
     style.whiteSpace = "pre-wrap";
     style.wordWrap = "break-word";
-
-    // Position off-screen
-    style.position = "fixed";
-    style.top = "0";
-    style.transform = "translateY(-100%)";
 
     const isFirefox = "mozInnerScreenX" in window;
 
