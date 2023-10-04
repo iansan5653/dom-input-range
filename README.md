@@ -4,7 +4,7 @@ The [`Range`](https://developer.mozilla.org/en-US/docs/Web/API/Range) web API pr
 
 These _could_ be extremely powerful when used in tandem with form input fields as they can allow for annotating text without having to wrap it in a `span`. Unfortunately, the contents of `<input>` and `<textarea>` elements remain inaccessible to this API because they are not rendered like regular `Text` nodes.
 
-This library aims to provide a solution to that through a new `InputRange` class that implements a subset of the `Range` API.
+This library aims to provide a solution to that through a new [`InputRange`](https://iansan5653.github.io/dom-input-range/) class that implements a subset of the `Range` API.
 
 > [!IMPORTANT]  
 > Support for `<input>` elements is not yet implemented, but will be added in an upcoming release.
