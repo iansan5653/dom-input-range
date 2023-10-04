@@ -132,11 +132,13 @@ export class InputRange implements ReadonlyTextRange {
     // It's tempting to create a single Range and reuse it across the lifetime of the class. However, this wouldn't be
     // accurate because the contents of the input can change and the contents of the range would become stale. So we
     // must create a new range every time we need it.
-    const textNode = this.#cloneElement.childNodes[0];
-
     const range = document.createRange();
-    range.setStart(textNode, this.startOffset);
-    range.setEnd(textNode, this.endOffset);
+
+    const textNode = this.#cloneElement.childNodes[0];
+    if (textNode) {
+      range.setStart(textNode, this.startOffset);
+      range.setEnd(textNode, this.endOffset);
+    }
 
     return range;
   }
