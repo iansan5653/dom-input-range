@@ -2,23 +2,71 @@ import {DOMRectListLike} from "./dom-rect-list-like.js";
 import {InputStyleClone} from "./input-clone.js";
 import {InputElement} from "./types.js";
 
-export class InputRange implements Pick<Range, keyof InputRange> {
-  #styleClone: InputStyleClone | null = null;
-  #inputRef: WeakRef<InputElement>;
+export class InputRange
+  implements Omit<Pick<Range, keyof InputRange>, "cloneRange">
+{
+  #styleClone: InputStyleClone;
+  #inputElement: InputElement;
 
   constructor(
     element: InputElement,
     public startOffset: number,
     public endOffset = startOffset
   ) {
-    this.#inputRef = new WeakRef(element);
+    this.#inputElement = element;
     this.#styleClone = new InputStyleClone(element);
+  }
+
+  get collapsed() {
+    return this.startOffset === this.endOffset;
+  }
+
+  get commonAncestorContainer() {
+    return this.#inputElement;
+  }
+
+  get endContainer() {
+    return this.#inputElement;
+  }
+
+  get startContainer() {
+    return this.#inputElement;
+  }
+
+  collapse(toStart = false) {
+    if (toStart) {
+      this.endOffset = this.startOffset;
+    } else {
+      this.startOffset = this.endOffset;
+    }
+  }
+
+  /** Always returns a `Text` node containing the content in the range. */
+  cloneContents() {
+    return this.#createCloneRange().cloneContents();
+  }
+
+  cloneRange() {
+    return new InputRange(this.#inputElement, this.startOffset, this.endOffset);
+  }
+
+  /** In `InputRange` is important to detach to preserve performance! */
+  // TODO: can we detach automatically when the input is garbage collected?
+  detach() {
+    this.#styleClone.detach();
+  }
+
+  getBoundingClientRect() {
+    const range = this.#createCloneRange();
+
+    const cloneRect = range.getBoundingClientRect();
+    const offsetRect = this.#offsetCloneRect(cloneRect);
+
+    return offsetRect;
   }
 
   getClientRects() {
     const range = this.#createCloneRange();
-
-    if (!range) return new DOMRectListLike();
 
     const cloneRects = Array.from(range.getClientRects());
     const offsetRects = cloneRects.map((domRect) =>
@@ -28,24 +76,20 @@ export class InputRange implements Pick<Range, keyof InputRange> {
     return new DOMRectListLike(...offsetRects);
   }
 
-  detach() {
-    this.#styleClone?.detach();
-    this.#styleClone = null;
+  toString() {
+    return this.#inputElement.value.slice(this.startOffset, this.endOffset);
   }
 
   // --- private ---
 
   get #cloneElement() {
-    return this.#styleClone?.cloneElement;
-  }
-
-  get #inputElement() {
-    return this.#inputRef.deref();
+    return this.#styleClone.cloneElement;
   }
 
   #createCloneRange() {
     const cloneElement = this.#cloneElement;
-    if (!cloneElement) return null;
+
+    if (!cloneElement) this.#throwHasDetached();
 
     const textNode = cloneElement.childNodes[0];
     const range = document.createRange();
@@ -61,10 +105,8 @@ export class InputRange implements Pick<Range, keyof InputRange> {
   #offsetCloneRect(rect: DOMRect) {
     const cloneElement = this.#cloneElement;
     const inputElement = this.#inputElement;
-    if (!cloneElement || !inputElement)
-      throw new Error(
-        "Failed to obtain elements to offset rect. Ensure that the function was not called after unmount."
-      );
+
+    if (!cloneElement) this.#throwHasDetached();
 
     const cloneRect = cloneElement.getBoundingClientRect();
     const inputRect = inputElement.getBoundingClientRect();
@@ -81,5 +123,9 @@ export class InputRange implements Pick<Range, keyof InputRange> {
       rect.width,
       rect.height
     );
+  }
+
+  #throwHasDetached(): never {
+    throw new Error("Cannot call this method on a detached range");
   }
 }
