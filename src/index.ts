@@ -50,8 +50,11 @@ export class InputRange
     return new InputRange(this.#inputElement, this.startOffset, this.endOffset);
   }
 
-  /** In `InputRange` is important to detach to preserve performance! */
-  // TODO: can we detach automatically when the input is garbage collected?
+  /**
+   * In `InputRange` is important to detach to preserve performance! If not explicitly detached, the range will remain
+   * attached until the input is unmounted, which could be the lifetime of the page. This would cause a memory leak if
+   * more `InputRange`s continue to be constructed without cleaning up existing ones.
+   */
   detach() {
     this.#styleClone.detach();
   }
@@ -77,7 +80,7 @@ export class InputRange
   }
 
   toString() {
-    return this.#inputElement.value.slice(this.startOffset, this.endOffset);
+    return this.#createCloneRange.toString();
   }
 
   // --- private ---
@@ -87,11 +90,11 @@ export class InputRange
   }
 
   #createCloneRange() {
-    const cloneElement = this.#cloneElement;
+    // It's tempting to create a single Range and reuse it across the lifetime of the class. However, this wouldn't be
+    // accurate because the contents of the input can change and the contents of the range would become stale. So we
+    // must create a new range every time we need it.
+    const textNode = this.#cloneElement.childNodes[0];
 
-    if (!cloneElement) this.#throwHasDetached();
-
-    const textNode = cloneElement.childNodes[0];
     const range = document.createRange();
     range.setStart(textNode, this.startOffset);
     range.setEnd(textNode, this.endOffset);
@@ -100,13 +103,11 @@ export class InputRange
   }
 
   /**
-   * Return a copy of the passed rect adjusted to match the position of the input element.
+   * Return a copy of the passed rect, adjusted to match the position of the input element.
    */
   #offsetCloneRect(rect: DOMRect) {
     const cloneElement = this.#cloneElement;
     const inputElement = this.#inputElement;
-
-    if (!cloneElement) this.#throwHasDetached();
 
     const cloneRect = cloneElement.getBoundingClientRect();
     const inputRect = inputElement.getBoundingClientRect();
@@ -123,9 +124,5 @@ export class InputRange
       rect.width,
       rect.height
     );
-  }
-
-  #throwHasDetached(): never {
-    throw new Error("Cannot call this method on a detached range");
   }
 }
