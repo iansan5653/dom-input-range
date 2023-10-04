@@ -55,10 +55,10 @@ const propertiesToCopy = [
  * Done wrong, this can have significant performance implications.
  */
 export class InputStyleClone {
-  readonly #mutationObserver = new MutationObserver(() => this.#updateStyles());
-  readonly #resizeObserver = new ResizeObserver(() => this.#updateStyles());
+  #mutationObserver = new MutationObserver(() => this.#updateStyles());
+  #resizeObserver = new ResizeObserver(() => this.#updateStyles());
 
-  readonly #inputRef;
+  #inputRef: WeakRef<InputElement>;
   #cloneElement: HTMLDivElement | null = null;
 
   constructor(input: InputElement) {
@@ -91,7 +91,7 @@ export class InputStyleClone {
     return this.#cloneElement;
   }
 
-  dispose() {
+  detach() {
     this.#mutationObserver.disconnect();
     this.#resizeObserver.disconnect();
     this.#cloneElement?.remove();

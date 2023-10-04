@@ -3,8 +3,8 @@ import {InputStyleClone} from "./input-clone.js";
 import {InputElement} from "./types.js";
 
 export class InputRange implements Pick<Range, keyof InputRange> {
-  readonly #styleClone;
-  readonly #inputRef;
+  #styleClone: InputStyleClone | null = null;
+  #inputRef: WeakRef<InputElement>;
 
   constructor(
     element: InputElement,
@@ -34,8 +34,15 @@ export class InputRange implements Pick<Range, keyof InputRange> {
     return new DOMRectListLike(...offsetRects);
   }
 
+  detach() {
+    this.#styleClone?.detach();
+    this.#styleClone = null;
+  }
+
+  // --- private ---
+
   get #cloneElement() {
-    return this.#styleClone.cloneElement;
+    return this.#styleClone?.cloneElement;
   }
 
   get #inputElement() {
