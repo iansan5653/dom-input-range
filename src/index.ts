@@ -43,11 +43,7 @@ export class InputRange implements ReadonlyTextRange {
   /** Create a new range from the current user selection. */
   static fromSelection(input: InputElement): InputRange {
     const { selectionStart, selectionEnd } = input;
-    return new InputRange(
-      input,
-      selectionStart ?? undefined,
-      selectionEnd ?? undefined,
-    );
+    return new InputRange(input, selectionStart ?? undefined, selectionEnd ?? undefined);
   }
 
   /** Returns true if the start is equal to the end of this range. */
@@ -122,9 +118,7 @@ export class InputRange implements ReadonlyTextRange {
     const range = this.#createCloneRange();
 
     const cloneRects = Array.from(range.getClientRects());
-    const offsetRects = cloneRects.map((domRect) =>
-      this.#styleClone.offsetCloneRect(domRect),
-    );
+    const offsetRects = cloneRects.map((domRect) => this.#styleClone.offsetCloneRect(domRect));
 
     return new DOMRectListLike(...offsetRects);
   }

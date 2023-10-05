@@ -124,18 +124,13 @@ export class InputStyleClone {
 
     // Transfer the element's properties to the div
     for (const prop of propertiesToCopy)
-      if (
-        !isInput &&
-        prop === "width" &&
-        inputStyle.boxSizing === "border-box"
-      ) {
+      if (!isInput && prop === "width" && inputStyle.boxSizing === "border-box") {
         // With box-sizing: border-box we need to offset the size slightly inwards. This small difference can compound
         // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
         // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
         // Either way we use `parseFloat` to turn `0.9px` into `0.9` and `1px` into `1`
         const totalBorderWidth =
-          parseFloat(inputStyle.borderLeftWidth) +
-          parseFloat(inputStyle.borderRightWidth);
+          parseFloat(inputStyle.borderLeftWidth) + parseFloat(inputStyle.borderRightWidth);
         // When a vertical scrollbar is present it shrinks the content. We need to account for this by using clientWidth
         // instead of width in everything but Firefox. When we do that we also have to account for the border width.
         const width = isFirefox
@@ -148,8 +143,7 @@ export class InputStyleClone {
 
     if (isFirefox) {
       // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
-      if (input.scrollHeight > parseInt(inputStyle.height))
-        style.overflowY = "scroll";
+      if (input.scrollHeight > parseInt(inputStyle.height)) style.overflowY = "scroll";
     } else {
       style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
     }

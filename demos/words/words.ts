@@ -1,8 +1,6 @@
-import {InputRange} from "../../src/index.js";
+import { InputRange } from "../../src/index.js";
 
-const inputs = document.querySelectorAll<
-  HTMLTextAreaElement | HTMLInputElement
->(".words-input");
+const inputs = document.querySelectorAll<HTMLTextAreaElement | HTMLInputElement>(".words-input");
 
 function createHighlight(rect: DOMRect) {
   const el = document.createElement("span");
@@ -36,11 +34,7 @@ function createHighlights() {
 
     let result: RegExpExecArray | null;
     while ((result = wordsRegex.exec(input.value))) {
-      const range = new InputRange(
-        input,
-        result.index,
-        result.index + result[0].length
-      );
+      const range = new InputRange(input, result.index, result.index + result[0].length);
 
       for (const rect of range.getClientRects()) {
         highlights.push(createHighlight(rect));
