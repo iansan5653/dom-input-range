@@ -1,9 +1,10 @@
-import { InputRange } from "../../src/index.js";
+import {InputRange} from "../../src/index.js";
 
-const target = document.getElementById("target") as HTMLTextAreaElement;
+const inputs = document.querySelectorAll<HTMLTextAreaElement>(".words-input");
 
 function createHighlight(rect: DOMRect) {
   const el = document.createElement("span");
+  el.classList.add("words-highlight");
   el.style.position = "fixed";
   el.style.backgroundColor = "red";
   el.style.opacity = "0.5";
@@ -27,15 +28,15 @@ function clearHighlights() {
   highlights = [];
 }
 
-function createHighlights() {
+function createHighlights(input: HTMLTextAreaElement) {
   const wordsRegex = new RegExp(words.join("|"), "g");
 
   let result: RegExpExecArray | null;
-  while ((result = wordsRegex.exec(target.value))) {
+  while ((result = wordsRegex.exec(input.value))) {
     const range = new InputRange(
-      target,
+      input,
       result.index,
-      result.index + result[0].length,
+      result.index + result[0].length
     );
 
     for (const rect of range.getClientRects()) {
@@ -44,9 +45,14 @@ function createHighlights() {
   }
 }
 
-createHighlights();
+for (const input of inputs) {
+  createHighlights(input);
 
-target.addEventListener("input", () => {
-  clearHighlights();
-  createHighlights();
-});
+  input.addEventListener("input", () => {
+    // use a timeout to let the input change first
+    setTimeout(() => {
+      clearHighlights();
+      createHighlights(input);
+    });
+  });
+}

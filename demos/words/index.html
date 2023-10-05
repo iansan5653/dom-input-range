@@ -1,18 +1,34 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>input-range | Demos | Words</title>
-    <script defer src="./words.js"></script>
-  </head>
 
-  <body>
-    <textarea id="target" rows="50" cols="100">
-Lorem ipsum apple dolor sit amet.</textarea
-    >
-    <p id="description">
-      Type "apple", "banana", or "grape" to see the highlight.
-    </p>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>input-range | Demos | Words</title>
+  <script defer src="./words.js"></script>
+
+  <style>
+    label,
+    input,
+    textarea {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <label>
+    Textarea
+    <textarea class="words-input" rows="50" cols="100" aria-describedby="description">
+Lorem ipsum apple dolor sit amet.</textarea>
+  </label>
+  <label>
+    Input
+    <input class="words-input" aria-describedby="description" size="100" value="Lorem ipsum apple dolor sit amet.">
+  </label>
+  <p id="description">
+    Type "apple", "banana", or "grape" to see the highlight.
+  </p>
+</body>
+
 </html>
