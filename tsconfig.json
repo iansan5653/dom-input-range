@@ -1,17 +1,8 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "incremental": true,
-    "target": "es2022",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "declaration": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
     "outDir": "dist",
-    "lib": ["es2022", "dom", "dom.iterable"]
   },
   "include": ["src/**/*"]
 }

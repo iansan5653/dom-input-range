@@ -2,3 +2,5 @@ node_modules
 *.tsbuildinfo
 dist
 docs
+demos/*/*.js
+demos/*/*.js.map
