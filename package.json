@@ -3,7 +3,8 @@
   "version": "0.0.6",
   "description": "Range-like API for input and textarea contents",
   "scripts": {
-    "prepare": "npm run build",
+    "prepack": "npm run build",
+    "postinstall": "(cd demos && npm install)",
     "build": "tsc",
     "format": "prettier . --write",
     "lint": "eslint",
