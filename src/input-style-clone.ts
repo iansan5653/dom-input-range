@@ -1,4 +1,4 @@
-export type InputElement = HTMLTextAreaElement;
+export type InputElement = HTMLTextAreaElement | HTMLInputElement;
 
 /**
  * Create a `div` that exactly matches an input element in all but position.
@@ -20,6 +20,7 @@ export class InputStyleClone {
 
   // There's no need to store the div in a weakref because once we auto-detach based on the input, this will get
   // released as the class itself gets garbage collected.
+  #cloneContainer: HTMLDivElement;
   #cloneElement: HTMLDivElement;
 
   isDetached = false;
@@ -27,11 +28,17 @@ export class InputStyleClone {
   constructor(input: InputElement) {
     this.#inputRef = new WeakRef(input);
 
-    const clone = document.createElement("div");
+    const cloneContainer = document.createElement("div");
     // Important not to use display:none which would not render the content
-    clone.style.visibility = "hidden";
-    clone.style.position = "absolute";
-    document.body.appendChild(clone);
+    cloneContainer.style.visibility = "hidden";
+    // We need a container because position:absolute is not compatible with display:table-cell which is used for single-line input clones
+    cloneContainer.style.position = "absolute";
+    document.body.appendChild(cloneContainer);
+
+    const clone = document.createElement("div");
+    cloneContainer.appendChild(clone);
+
+    this.#cloneContainer = cloneContainer;
     this.#cloneElement = clone;
 
     this.#updateStyles();
@@ -43,13 +50,10 @@ export class InputStyleClone {
   }
 
   get cloneElement() {
-    const inputElement = this.#inputElement;
-    if (inputElement) {
-      // Text content cannot be updated via event listener because change events are not triggered when value is set
-      // directly. Nor can we use MutationObserver because value is a property, not an attribute. So we always set it
-      // on retrieval instead. This is a low-cost operation so we don't need to worry too much about overdoing it.
-      this.#cloneElement.textContent = inputElement.value;
-    }
+    // Text content cannot be updated via event listener because change events are not triggered when value is set
+    // directly. Nor can we use MutationObserver because value is a property, not an attribute. So we always set it
+    // on retrieval instead. This is a low-cost operation so we don't need to worry too much about overdoing it.
+    this.#updateText();
 
     return this.#cloneElement;
   }
@@ -57,7 +61,7 @@ export class InputStyleClone {
   detach() {
     this.#mutationObserver.disconnect();
     this.#resizeObserver.disconnect();
-    this.#cloneElement?.remove();
+    this.#cloneContainer.remove();
     this.isDetached = true;
   }
 
@@ -85,7 +89,7 @@ export class InputStyleClone {
       rect.left - cloneRect.left + inputRect.left - inputScroll.left,
       rect.top - cloneRect.top + inputRect.top - inputScroll.top,
       rect.width,
-      rect.height,
+      rect.height
     );
   }
 
@@ -104,15 +108,27 @@ export class InputStyleClone {
     const style = clone.style;
     const inputStyle = window.getComputedStyle(input);
 
-    // Default wrapping styles
-    style.whiteSpace = "pre-wrap";
-    style.wordWrap = "break-word";
+    const isInput = input instanceof HTMLInputElement;
 
     const isFirefox = "mozInnerScreenX" in window;
 
+    if (isInput) {
+      style.whiteSpace = "nowrap";
+      // text in single-line inputs is vertically centered
+      style.display = "table-cell";
+      style.verticalAlign = "middle";
+    } else {
+      style.whiteSpace = "pre-wrap";
+      style.wordWrap = "break-word";
+    }
+
     // Transfer the element's properties to the div
     for (const prop of propertiesToCopy)
-      if (prop === "width" && inputStyle.boxSizing === "border-box") {
+      if (
+        !isInput &&
+        prop === "width" &&
+        inputStyle.boxSizing === "border-box"
+      ) {
         // With box-sizing: border-box we need to offset the size slightly inwards.  This small difference can compound
         // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
         // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
@@ -137,6 +153,11 @@ export class InputStyleClone {
     } else {
       style.overflow = "hidden"; // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
     }
+  }
+
+  #updateText() {
+    // Original code replaced spaces with NBSP (`\u00a0`) but this seems unecessary if we have word-wrap: nowrap
+    this.#cloneElement.textContent = this.#inputElement?.value ?? "";
   }
 }
 

@@ -28,31 +28,32 @@ function clearHighlights() {
   highlights = [];
 }
 
-function createHighlights(input: HTMLTextAreaElement) {
-  const wordsRegex = new RegExp(words.join("|"), "g");
+function createHighlights() {
+  for (const input of inputs) {
+    const wordsRegex = new RegExp(words.join("|"), "g");
 
-  let result: RegExpExecArray | null;
-  while ((result = wordsRegex.exec(input.value))) {
-    const range = new InputRange(
-      input,
-      result.index,
-      result.index + result[0].length
-    );
+    let result: RegExpExecArray | null;
+    while ((result = wordsRegex.exec(input.value))) {
+      const range = new InputRange(
+        input,
+        result.index,
+        result.index + result[0].length
+      );
 
-    for (const rect of range.getClientRects()) {
-      highlights.push(createHighlight(rect));
+      for (const rect of range.getClientRects()) {
+        highlights.push(createHighlight(rect));
+      }
     }
   }
 }
 
-for (const input of inputs) {
-  createHighlights(input);
+createHighlights();
 
+for (const input of inputs)
   input.addEventListener("input", () => {
     // use a timeout to let the input change first
     setTimeout(() => {
       clearHighlights();
-      createHighlights(input);
+      createHighlights();
     });
   });
-}

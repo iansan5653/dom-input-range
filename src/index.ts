@@ -43,7 +43,7 @@ export class InputRange implements ReadonlyTextRange {
   /** Create a new range from the current user selection. */
   static fromSelection(input: InputElement): InputRange {
     const { selectionStart, selectionEnd } = input;
-    return new InputRange(input, selectionStart, selectionEnd);
+    return new InputRange(input, selectionStart ?? undefined, selectionEnd ?? undefined);
   }
 
   /** Returns true if the start is equal to the end of this range. */
@@ -188,8 +188,8 @@ export class InputRange implements ReadonlyTextRange {
       instance,
       removalTimeout: setTimeout(() => {
         // Delete from map before detaching to avoid race conditions where another call grabs the clone we are detaching
-        this.#cloneRegistry.delete(input);
-        instance.detach();
+        //this.#cloneRegistry.delete(input);
+        //instance.detach();
       }, InputRange.#CLONE_USAGE_TIMEOUT),
     });
 
