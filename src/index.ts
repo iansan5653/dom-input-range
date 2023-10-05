@@ -43,7 +43,11 @@ export class InputRange implements ReadonlyTextRange {
   /** Create a new range from the current user selection. */
   static fromSelection(input: InputElement): InputRange {
     const { selectionStart, selectionEnd } = input;
-    return new InputRange(input, selectionStart ?? undefined, selectionEnd ?? undefined);
+    return new InputRange(
+      input,
+      selectionStart ?? undefined,
+      selectionEnd ?? undefined,
+    );
   }
 
   /** Returns true if the start is equal to the end of this range. */

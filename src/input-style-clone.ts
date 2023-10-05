@@ -89,7 +89,7 @@ export class InputStyleClone {
       rect.left - cloneRect.left + inputRect.left - inputScroll.left,
       rect.top - cloneRect.top + inputRect.top - inputScroll.top,
       rect.width,
-      rect.height
+      rect.height,
     );
   }
 
