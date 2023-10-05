@@ -1,6 +1,8 @@
 import {InputRange} from "../../src/index.js";
 
-const inputs = document.querySelectorAll<HTMLTextAreaElement>(".words-input");
+const inputs = document.querySelectorAll<
+  HTMLTextAreaElement | HTMLInputElement
+>(".words-input");
 
 function createHighlight(rect: DOMRect) {
   const el = document.createElement("span");
