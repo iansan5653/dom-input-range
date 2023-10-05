@@ -129,7 +129,7 @@ export class InputStyleClone {
         prop === "width" &&
         inputStyle.boxSizing === "border-box"
       ) {
-        // With box-sizing: border-box we need to offset the size slightly inwards.  This small difference can compound
+        // With box-sizing: border-box we need to offset the size slightly inwards. This small difference can compound
         // greatly in long textareas with lots of wrapping, leading to very innacurate results if not accounted for.
         // Firefox will return computed styles in floats, like `0.9px`, while chromium might return `1px` for the same element.
         // Either way we use `parseFloat` to turn `0.9px` into `0.9` and `1px` into `1`

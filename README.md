@@ -6,9 +6,6 @@ These _could_ be extremely powerful when used in tandem with form input fields a
 
 This library aims to provide a solution to that through a new [`InputRange`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html) class that implements a subset of the `Range` API.
 
-> [!IMPORTANT]  
-> Support for `<input>` elements is not yet implemented, but will be added in an upcoming release.
-
 ## Usage
 
 First, install the package:
@@ -37,7 +34,7 @@ For the full api, see the docs for [`InputRange`](https://iansan5653.github.io/d
 
 ## Demos
 
-- [Words](https://iansan5653.github.io/dom-input-range/demos/words/): Highlight certain words in a `<textarea>` as the user types
+- [Words](https://iansan5653.github.io/dom-input-range/demos/words/): Highlight certain words in an input as the user types
 
 ## Available features and limitations
 
