@@ -1,5 +1,7 @@
 import { DOMRectListLike } from "./dom-rect-list-like.js";
-import { InputElement, InputStyleClone } from "./input-style-clone.js";
+import { type InputElement, InputStyleClone } from "./input-style-clone.js";
+
+export type { InputElement } from "./input-style-clone.js";
 
 /**
  * A fragment of a document that can contain only pieces of a single text node. Does not implement `Range` methods
