@@ -2,7 +2,7 @@ export type InputElement = HTMLTextAreaElement;
 
 /**
  * Create a `div` that exactly matches an input element in all but position.
- * 
+ *
  * PRIOR ART: This approach & code was adapted from the following MIT-licensed sources:
  * - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
  * - koddsson/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/koddsson/textarea-caret-position/blob/eba40ec8488eed4d77815f109af22e1d9c0751d3/index.js

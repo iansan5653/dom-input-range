@@ -13,11 +13,7 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
+  "plugins": ["@typescript-eslint"],
   "rules": {},
-  "ignorePatterns": [
-    "*.config.js"
-  ]
+  "ignorePatterns": ["*.config.js"]
 }

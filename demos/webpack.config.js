@@ -1,5 +1,5 @@
-import * as url from 'url';
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+import * as url from "url";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 /** @type {import("webpack").Configuration} */
 const config = {
@@ -20,7 +20,7 @@ const config = {
   resolve: {
     extensions: [".ts", ".js"],
     extensionAlias: {
-      '.js': ['.js', '.ts'],
+      ".js": [".js", ".ts"],
     },
   },
   output: {

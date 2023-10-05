@@ -1,5 +1,5 @@
-import {DOMRectListLike} from "./dom-rect-list-like.js";
-import {InputElement, InputStyleClone} from "./input-style-clone.js";
+import { DOMRectListLike } from "./dom-rect-list-like.js";
+import { InputElement, InputStyleClone } from "./input-style-clone.js";
 
 /**
  * A fragment of a document that can contain only pieces of a single text node. Does not implement `Range` methods
@@ -42,7 +42,7 @@ export class InputRange implements ReadonlyTextRange {
 
   /** Create a new range from the current user selection. */
   static fromSelection(input: InputElement): InputRange {
-    const {selectionStart, selectionEnd} = input;
+    const { selectionStart, selectionEnd } = input;
     return new InputRange(input, selectionStart, selectionEnd);
   }
 
@@ -119,7 +119,7 @@ export class InputRange implements ReadonlyTextRange {
 
     const cloneRects = Array.from(range.getClientRects());
     const offsetRects = cloneRects.map((domRect) =>
-      this.#styleClone.offsetCloneRect(domRect)
+      this.#styleClone.offsetCloneRect(domRect),
     );
 
     return new DOMRectListLike(...offsetRects);
@@ -165,7 +165,7 @@ export class InputRange implements ReadonlyTextRange {
 
   static #cloneRegistry = new WeakMap<
     InputElement,
-    {instance: InputStyleClone; removalTimeout: ReturnType<typeof setTimeout>}
+    { instance: InputStyleClone; removalTimeout: ReturnType<typeof setTimeout> }
   >();
 
   /**

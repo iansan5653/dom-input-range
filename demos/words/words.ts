@@ -1,4 +1,4 @@
-import {InputRange} from "../../src/index.js";
+import { InputRange } from "../../src/index.js";
 
 const target = document.getElementById("target") as HTMLTextAreaElement;
 
@@ -35,7 +35,7 @@ function createHighlights() {
     const range = new InputRange(
       target,
       result.index,
-      result.index + result[0].length
+      result.index + result[0].length,
     );
 
     for (const rect of range.getClientRects()) {
