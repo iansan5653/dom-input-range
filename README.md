@@ -35,6 +35,10 @@ InputRange.fromSelection(element).getClientRects();
 
 For the full api, see the docs for [`InputRange`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html).
 
+## Demos
+
+- [Words](https://iansan5653.github.io/dom-input-range/demos/words/): Highlight certain words in a `<textarea>` as the user types
+
 ## Available features and limitations
 
 This API is focused on providing an intuitive way to obtain the coordinates of text inside a form field element. It also implements a few other `Range` methods for consistency with the browser API, but it does not implement the entire class:
