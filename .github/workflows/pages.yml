@@ -24,6 +24,9 @@ jobs:
       - uses: actions/setup-node@v3
       - run: npm ci
       - run: npm run build-docs
+      - run: |
+          npm run build-demos
+          cp -r ./demos ./docs/demos
       - uses: actions/configure-pages@v3
       - uses: actions/upload-pages-artifact@v2
         with:
