@@ -9,7 +9,7 @@
     "format": "prettier . --write",
     "lint": "eslint",
     "check-formatting": "prettier . --check",
-    "build-docs": "typedoc src/index.ts --sort static-first --excludePrivate",
+    "build-docs": "typedoc src/index.ts --sort static-first --excludePrivate && cp ./screenshot.png docs/screenshot.png",
     "build-demos": "(cd demos && npm run build)",
     "build-demos-watch": "cd demos && npm run build-watch"
   },

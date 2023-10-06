@@ -6,6 +6,8 @@ These _could_ be extremely powerful when used in tandem with form input fields a
 
 This library aims to provide a solution to that through a new [`InputRange`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html) class that implements a subset of the `Range` API.
 
+![Screenshot of a textarea with highlighted range of text. A blue box is rendered around the entire range and the text in the range is highlighted with translucent red boxes.](./screenshot.png)
+
 ## Usage
 
 First, install the package:
