@@ -33,8 +33,8 @@ export class InputRange implements ReadonlyTextRange {
   /**
    * Construct a new `InputRange`.
    * @param element The target input element that contains the content for the range.
-   * @param startOffset The inclusive 0-based start offset for the range. Will be adjusted to fit in the input contents.
-   * @param endOffset The exclusive 0-based end offset for the range. Will be adjusted to fit in the input contents.
+   * @param startOffset The inclusive 0-based start index for the range. Will be adjusted to fit in the input contents.
+   * @param endOffset The exclusive 0-based end index for the range. Will be adjusted to fit in the input contents.
    */
   constructor(element: InputElement, startOffset = 0, endOffset = startOffset) {
     this.#inputElement = element;
@@ -42,7 +42,14 @@ export class InputRange implements ReadonlyTextRange {
     this.#endOffset = endOffset;
   }
 
-  /** Create a new range from the current user selection. */
+  /**
+   * Create a new range from the current user selection. If the input is not focused, the range will just be the start
+   * of the input (offsets `0` to `0`).
+   * 
+   * This can be used to get the caret coordinates: if the resulting range is `collapsed`, the location of the
+   * `getBoundingClientRect` will be the location of the caret caret (note, however, that the width will be `0` in
+   * this case).
+   */
   static fromSelection(input: InputElement): InputRange {
     const { selectionStart, selectionEnd } = input;
     return new InputRange(input, selectionStart ?? undefined, selectionEnd ?? undefined);
@@ -105,7 +112,10 @@ export class InputRange implements ReadonlyTextRange {
     return new InputRange(this.#inputElement, this.startOffset, this.endOffset);
   }
 
-  /** Obtain one rect that contains the entire contents of the range. */
+  /**
+   * Obtain one rect that contains the entire contents of the range. If the range spans multiple lines, this box will
+   * contain all pieces of the range but may also contain some space outside the range.
+   */
   getBoundingClientRect(): DOMRect {
     const range = this.#createCloneRange();
 
@@ -115,7 +125,10 @@ export class InputRange implements ReadonlyTextRange {
     return offsetRect;
   }
 
-  /** Obtain the rects that contain contents of this range. There may be multiple if the range spans multiple lines. */
+  /**
+   * Obtain the rects that contain contents of this range. If the range spans multiple lines, there will be multiple
+   * bounding boxes. These boxes can be used, for example, to draw a highlight over the range.
+   */
   getClientRects(): DOMRectList {
     const range = this.#createCloneRange();
 
