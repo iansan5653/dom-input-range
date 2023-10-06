@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>input-range | Demos | Caret</title>
+  <script defer src="./caret.js"></script>
+
+  <style>
+    label,
+    input,
+    textarea {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <label>
+    Textarea
+    <textarea class="caret-input" rows="50" cols="100" aria-describedby="description">
+      Lorem ipsum apple dolor sit amet.
+      </textarea>
+  </label>
+  <label>
+    Input
+    <input class="caret-input" aria-describedby="description" size="100" value="Lorem ipsum apple dolor sit amet."
+      style="height: 25px" />
+  </label>
+  <p id="description">
+    Focus the textarea to see an indicator under the caret. This approach could be used, for example, to position a list
+    of autocomplete suggestions.
+  </p>
+</body>
+
+</html>

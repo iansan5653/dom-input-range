@@ -7,6 +7,7 @@ const config = {
   devtool: "source-map",
   entry: {
     words: "./words/words.ts",
+    caret: "./caret/caret.ts",
   },
   module: {
     rules: [
