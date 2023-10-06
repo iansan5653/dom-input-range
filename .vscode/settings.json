@@ -1,5 +1,8 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.prettierPath": "./node_modules/prettier"
+  "prettier.prettierPath": "./node_modules/prettier",
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
