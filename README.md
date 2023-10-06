@@ -38,7 +38,7 @@ For the full api, see the docs for [`InputRange`](https://iansan5653.github.io/d
 
 - [Words](https://iansan5653.github.io/dom-input-range/demos/words/): Highlight certain words in an input as the user types
 - [Caret](https://iansan5653.github.io/dom-input-range/demos/caret/): Show an indicator wherever the caret is located
-- [Playground](https://iansan5653.github.io/dom-input-range/demos/playground/): Play with a `<textarea>` to see the difference between `getBoundingClientRect` and `getClientRects`
+- [Playground](https://iansan5653.github.io/dom-input-range/demos/playground/): Play with a `<textarea>` to see the difference between [`getBoundingClientRect`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#getBoundingClientRect) and [`getClientRects`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#getClientRects)
 
 ## Available features and limitations
 
