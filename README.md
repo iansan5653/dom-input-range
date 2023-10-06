@@ -10,7 +10,7 @@ This library aims to provide a solution to that through a new [`InputRange`](htt
 
 ## Usage
 
-First, install the package:
+Install the package:
 
 ```sh
 npm install dom-input-range
@@ -46,7 +46,7 @@ This API is focused on providing an intuitive way to obtain the coordinates of t
 
 - All methods for querying information about the range are implemented
 - This `InputRange` cannot cross `Node` boundaries, so any method that works with `Node`s is not implemented
-- Two new manipulation methods are present instead: `setStartOffset` and `setEndOffset`
+- Two new manipulation methods are present instead: [`setStartOffset`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#setStartOffset) and [`setEndOffset`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#setEndOffset)
 - Methods that modify the range contents are not implemented - work with the input `value` directly instead
 
 ## Implementation and performance considerations
