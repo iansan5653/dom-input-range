@@ -45,7 +45,7 @@ export class InputRange implements ReadonlyTextRange {
   /**
    * Create a new range from the current user selection. If the input is not focused, the range will just be the start
    * of the input (offsets `0` to `0`).
-   * 
+   *
    * This can be used to get the caret coordinates: if the resulting range is `collapsed`, the location of the
    * `getBoundingClientRect` will be the location of the caret caret (note, however, that the width will be `0` in
    * this case).
@@ -115,6 +115,7 @@ export class InputRange implements ReadonlyTextRange {
   /**
    * Obtain one rect that contains the entire contents of the range. If the range spans multiple lines, this box will
    * contain all pieces of the range but may also contain some space outside the range.
+   * @see https://iansan5653.github.io/dom-input-range/demos/playground/
    */
   getBoundingClientRect(): DOMRect {
     const range = this.#createCloneRange();
@@ -128,6 +129,7 @@ export class InputRange implements ReadonlyTextRange {
   /**
    * Obtain the rects that contain contents of this range. If the range spans multiple lines, there will be multiple
    * bounding boxes. These boxes can be used, for example, to draw a highlight over the range.
+   * @see https://iansan5653.github.io/dom-input-range/demos/playground/
    */
   getClientRects(): DOMRectList {
     const range = this.#createCloneRange();

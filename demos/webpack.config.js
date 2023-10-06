@@ -8,6 +8,7 @@ const config = {
   entry: {
     words: "./words/words.ts",
     caret: "./caret/caret.ts",
+    playground: "./playground/playground.ts",
   },
   module: {
     rules: [
