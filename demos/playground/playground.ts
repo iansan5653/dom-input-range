@@ -9,6 +9,7 @@ const rects: HTMLElement[] = [];
 function drawBoundingRect(rect: DOMRect) {
   const el = document.createElement("span");
   el.style.position = "fixed";
+  el.style.pointerEvents = "none";
   el.style.outline = `2px solid blue`;
   el.style.top = `${rect.top}px`;
   el.style.left = `${rect.left}px`;
@@ -21,6 +22,7 @@ function drawBoundingRect(rect: DOMRect) {
 function drawRect(rect: DOMRect) {
   const el = document.createElement("span");
   el.style.position = "fixed";
+  el.style.pointerEvents = "none";
   el.style.background = "red";
   el.style.opacity = "0.5";
   el.style.top = `${rect.top}px`;

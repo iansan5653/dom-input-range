@@ -17,8 +17,20 @@
 
   <body>
     <p>
-      The result of <code>getBoundingClientRect</code> is shown as a blue box. The result of
-      <code>getClientRects</code> is shown as red boxes.
+      The result of <code>getBoundingClientRect</code> is shown as a blue outline. The result of
+      <code>getClientRects</code> is shown as red highlights.
+    </p>
+
+    <p style="display: flex; gap: 1em">
+      <label>
+        Start offset
+        <input id="start" type="number" value="100" />
+      </label>
+
+      <label>
+        End offset
+        <input id="end" type="number" value="1700" />
+      </label>
     </p>
 
     <label>
@@ -30,16 +42,6 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel auctor magn
         
         Nullam condimentum nunc erat, quis commodo turpis suscipit ut. Etiam hendrerit, mauris ac pharetra rhoncus, elit elit luctus odio, sed sodales mi magna quis ex. Aliquam dignissim, massa ac tristique egestas, neque libero dictum sapien, eu molestie mi nulla a quam. Sed laoreet malesuada imperdiet. Morbi a augue quam. Integer ac vestibulum turpis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce aliquam erat dolor, eu posuere nisl facilisis ac. Sed sodales in ex porttitor luctus. Ut in odio faucibus, euismod turpis sed, sollicitudin lacus.</textarea
       >
-    </label>
-
-    <label>
-      Start offset
-      <input id="start" type="number" value="100" />
-    </label>
-
-    <label>
-      End offset
-      <input id="end" type="number" value="1700" />
     </label>
   </body>
 </html>
