@@ -4,14 +4,13 @@
   "description": "Range-like API for input and textarea contents",
   "scripts": {
     "prepack": "npm run build",
-    "postinstall": "(cd demos && npm install)",
     "build": "tsc",
     "format": "prettier . --write",
     "lint": "eslint",
     "check-formatting": "prettier . --check",
     "build-docs": "typedoc src/index.ts --sort static-first --excludePrivate && cp ./screenshot.png docs/screenshot.png",
-    "build-demos": "(cd demos && npm run build)",
-    "build-demos-watch": "cd demos && npm run build-watch"
+    "build-demos": "npm run -w demos build",
+    "build-demos-watch": "npm run -w demos build-watch"
   },
   "repository": {
     "type": "git",
@@ -45,5 +44,6 @@
   "files": [
     "dist/*.d.ts",
     "dist/*.js"
-  ]
+  ],
+  "workspaces": ["demos"]
 }

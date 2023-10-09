@@ -1,4 +1,6 @@
 {
+  "name": "demos",
+  "private": true,
   "devDependencies": {
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
