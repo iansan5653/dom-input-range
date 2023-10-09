@@ -45,5 +45,7 @@
     "dist/*.d.ts",
     "dist/*.js"
   ],
-  "workspaces": ["demos"]
+  "workspaces": [
+    "demos"
+  ]
 }
