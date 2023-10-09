@@ -10,7 +10,8 @@
     "check-formatting": "prettier . --check",
     "build-docs": "typedoc src/index.ts --sort static-first --excludePrivate && cp ./screenshot.png docs/screenshot.png",
     "build-demos": "npm run -w demos build",
-    "build-demos-watch": "npm run -w demos build-watch"
+    "build-demos-watch": "npm run -w demos build-watch",
+    "release": "./release.sh"
   },
   "repository": {
     "type": "git",
