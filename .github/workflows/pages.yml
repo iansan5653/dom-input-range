@@ -20,8 +20,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # I'm OK using a version instead of a commit hash here since this is my action and I'm not going to poison myself :)
       - id: deployment
-        uses: iansan5653/publish-js-to-pages@ed31b5540b521813852aecb05075efbd38aa8d9c
+        uses: iansan5653/publish-js-to-pages@1.0.1
         with:
           build_command: npm run build-docs && npm run build-demos && cp -r ./demos ./docs/demos
           build_output_directory: ./docs
