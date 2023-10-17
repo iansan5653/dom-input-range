@@ -20,18 +20,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - run: npm ci
-      - run: npm run build-docs
-      - run: |
-          npm run build-demos
-          cp -r ./demos ./docs/demos
-      - uses: actions/configure-pages@v3
-      - uses: actions/upload-pages-artifact@v2
-        with:
-          path: "./docs"
       - id: deployment
-        uses: actions/deploy-pages@v2
+        uses: iansan5653/publish-js-to-pages@ed31b5540b521813852aecb05075efbd38aa8d9c
+        with:
+          build_command: npm run build-docs && npm run build-demos && cp -r ./demos ./docs/demos
+          build_output_directory: ./docs
