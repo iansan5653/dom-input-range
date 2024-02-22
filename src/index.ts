@@ -134,6 +134,14 @@ export class InputRange implements ReadonlyTextRange {
     return this.#createCloneRange.toString();
   }
 
+  /**
+   * Get the underlying `InputStyleClone` instance powering these calculations. This can be used to listen for
+   * updates to trigger layout recalculation.
+   */
+  getStyleClone(): InputStyleClone {
+    return this.#styleClone;
+  }
+
   // --- private ---
 
   get #styleClone() {

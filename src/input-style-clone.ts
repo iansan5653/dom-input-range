@@ -9,7 +9,10 @@ export class InputStyleCloneUpdateEvent extends Event {
 /**
  * Create a `div` that exactly matches an input element and automatically stays in sync with it.
  *
- * Emits `update` events whenever anything is recalculated: when the layout changes, when the user scrolls, etc.
+ * Emits `update` events whenever anything is recalculated: when the layout changes, when the user scrolls, when the
+ * input is updated, etc. This event may be emitted more than once per change.
+ *
+ * NOTE! This class will not auto update if `input.value` is set directly!
  *
  * PRIOR ART: This approach & code was adapted from the following MIT-licensed sources:
  * - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
@@ -18,7 +21,7 @@ export class InputStyleCloneUpdateEvent extends Event {
  */
 export class InputStyleClone extends EventTarget {
   #mutationObserver = new MutationObserver(() => this.#updateStyles());
-  #resizeObserver = new ResizeObserver(() => this.#updateLayout());
+  #resizeObserver = new IntersectionObserver(() => this.#updateLayout(), { threshold: 0.01 });
 
   // This class is unique in that it will prevent itself from getting garbage collected because of the subscribed
   // observers (if never detached). Because of this, we want to avoid preventing the existence of this class from also
@@ -48,20 +51,17 @@ export class InputStyleClone extends EventTarget {
     this.#cloneElement = clone;
 
     this.#updateStyles();
+    this.#updateText();
 
     this.#mutationObserver.observe(input, {
       attributeFilter: ["style"],
     });
     this.#resizeObserver.observe(input);
     input.addEventListener("scroll", this.#updateScroll, true);
+    input.addEventListener("input", this.#updateText);
   }
 
   get cloneElement() {
-    // Text content cannot be updated via event listener because change events are not triggered when value is set
-    // directly. Nor can we use MutationObserver because value is a property, not an attribute. So we always set it
-    // on retrieval instead. This is a low-cost operation so we don't need to worry too much about overdoing it.
-    this.#updateText();
-
     return this.#cloneElement;
   }
 
@@ -70,7 +70,14 @@ export class InputStyleClone extends EventTarget {
     this.#resizeObserver.disconnect();
     this.#cloneContainer.remove();
     this.#inputElement?.removeEventListener("scroll", this.#updateScroll, true);
+    this.#inputElement?.removeEventListener("input", this.#updateText, true);
     this.isDetached = true;
+  }
+
+  /** Force a recalculation. Will emit an `update` event. */
+  forceUpdate() {
+    this.#updateStyles();
+    this.#updateText();
   }
 
   // --- private ---
@@ -163,10 +170,11 @@ export class InputStyleClone extends EventTarget {
     this.#updateLayout();
   }
 
-  #updateText() {
+  #updateText = () => {
     // Original code replaced spaces with NBSP (`\u00a0`) but this seems unecessary if we have word-wrap: nowrap
     this.#cloneElement.textContent = this.#inputElement?.value ?? "";
-  }
+    this.#updateScroll();
+  };
 }
 
 // Note that some browsers, such as Firefox, do not concatenate properties
