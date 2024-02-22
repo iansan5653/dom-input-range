@@ -6,8 +6,15 @@ export class InputStyleCloneUpdateEvent extends Event {
   }
 }
 
+const CLONE_USAGE_TIMEOUT = 5_000;
+
+const CloneRegistry = new WeakMap<
+  InputElement,
+  { instance: InputStyleClone; removalTimeout: ReturnType<typeof setTimeout> }
+>();
+
 /**
- * Create a `div` that exactly matches an input element and automatically stays in sync with it.
+ * Create an element that exactly matches an input and automatically stays in sync with it.
  *
  * Emits `update` events whenever anything is recalculated: when the layout changes, when the user scrolls, when the
  * input is updated, etc. This event may be emitted more than once per change.
@@ -20,8 +27,8 @@ export class InputStyleCloneUpdateEvent extends Event {
  * - component/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/component/textarea-caret-position/blob/b5db7a7e47dd149c2a66276183c69234e4dabe30/index.js
  */
 export class InputStyleClone extends EventTarget {
-  #mutationObserver = new MutationObserver(() => this.#updateStyles());
-  #resizeObserver = new IntersectionObserver(() => this.#updateLayout(), { threshold: 0.01 });
+  #styleObserver = new MutationObserver(() => this.#updateStyles());
+  #resizeObserver = new ResizeObserver(() => this.#updateLayout());
 
   // This class is unique in that it will prevent itself from getting garbage collected because of the subscribed
   // observers (if never detached). Because of this, we want to avoid preventing the existence of this class from also
@@ -36,7 +43,35 @@ export class InputStyleClone extends EventTarget {
 
   isDetached = false;
 
-  constructor(input: InputElement) {
+  /**
+   * Get the clone for an input, reusing an existing one if possible. Existing clones are deleted if not used, so it's
+   * important that we always call this method instead of storing a reference to the clone. The clone is completely
+   * private so we don't need to worry about consumers doing this incorrectly.
+   */
+  static for(input: InputElement) {
+    const existing = CloneRegistry.get(input);
+
+    let instance: InputStyleClone;
+    if (existing) {
+      clearTimeout(existing.removalTimeout);
+      instance = existing.instance;
+    } else {
+      instance = new InputStyleClone(input);
+    }
+
+    CloneRegistry.set(input, {
+      instance,
+      removalTimeout: setTimeout(() => {
+        // Delete from map before detaching to avoid race conditions where another call grabs the clone we are detaching
+        //this.#cloneRegistry.delete(input);
+        //instance.detach();
+      }, CLONE_USAGE_TIMEOUT),
+    });
+
+    return instance;
+  }
+
+  private constructor(input: InputElement) {
     super();
 
     this.#inputRef = new WeakRef(input);
@@ -53,12 +88,14 @@ export class InputStyleClone extends EventTarget {
     this.#updateStyles();
     this.#updateText();
 
-    this.#mutationObserver.observe(input, {
+    this.#styleObserver.observe(input, {
       attributeFilter: ["style"],
     });
     this.#resizeObserver.observe(input);
-    input.addEventListener("scroll", this.#updateScroll, true);
-    input.addEventListener("input", this.#updateText);
+
+    document.addEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
+    window.addEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
+    input.addEventListener("input", this.#onInput);
   }
 
   get cloneElement() {
@@ -66,11 +103,12 @@ export class InputStyleClone extends EventTarget {
   }
 
   detach() {
-    this.#mutationObserver.disconnect();
+    this.#styleObserver.disconnect();
     this.#resizeObserver.disconnect();
     this.#cloneContainer.remove();
-    this.#inputElement?.removeEventListener("scroll", this.#updateScroll, true);
-    this.#inputElement?.removeEventListener("input", this.#updateText, true);
+    document.removeEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
+    window.removeEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
+    this.#inputElement?.removeEventListener("input", this.#onInput, true);
     this.isDetached = true;
   }
 
@@ -118,16 +156,6 @@ export class InputStyleClone extends EventTarget {
     return this.#inputRef.deref();
   }
 
-  #updateScroll = () => {
-    const input = this.#inputElement;
-    if (!input) return;
-
-    this.#cloneElement.scrollTop = input.scrollTop;
-    this.#cloneElement.scrollLeft = input.scrollLeft;
-
-    this.dispatchEvent(new InputStyleCloneUpdateEvent());
-  };
-
   #xOffset = 0;
   #yOffset = 0;
 
@@ -155,7 +183,10 @@ export class InputStyleClone extends EventTarget {
 
     clone.style.transform = `translate(${this.#xOffset}px, ${this.#yOffset}px)`;
 
-    this.#updateScroll();
+    this.#cloneElement.scrollTop = input.scrollTop;
+    this.#cloneElement.scrollLeft = input.scrollLeft;
+
+    this.dispatchEvent(new InputStyleCloneUpdateEvent());
   }
 
   #updateStyles() {
@@ -170,10 +201,25 @@ export class InputStyleClone extends EventTarget {
     this.#updateLayout();
   }
 
-  #updateText = () => {
+  #updateText() {
     // Original code replaced spaces with NBSP (`\u00a0`) but this seems unecessary if we have word-wrap: nowrap
     this.#cloneElement.textContent = this.#inputElement?.value ?? "";
-    this.#updateScroll();
+
+    // No need to update layout; if the text causes a scroll it will trigger a layout change via event listener
+    this.dispatchEvent(new InputStyleCloneUpdateEvent());
+  }
+
+  #onInput = () => this.#updateText();
+
+  #onDocumentScrollOrResize = (event: Event) => {
+    console.log(event.target);
+    if (
+      this.#inputElement &&
+      (event.target === document ||
+        event.target === window ||
+        (event.target instanceof Node && event.target.contains(this.#inputElement)))
+    )
+      this.#updateLayout();
   };
 }
 

@@ -145,7 +145,7 @@ export class InputRange implements ReadonlyTextRange {
   // --- private ---
 
   get #styleClone() {
-    return InputRange.#getStyleCloneFor(this.#inputElement);
+    return InputStyleClone.for(this.#inputElement);
   }
 
   get #cloneElement() {
@@ -169,42 +169,5 @@ export class InputRange implements ReadonlyTextRange {
     }
 
     return range;
-  }
-
-  // --- static ---
-
-  static #CLONE_USAGE_TIMEOUT = 5_000;
-
-  static #cloneRegistry = new WeakMap<
-    InputElement,
-    { instance: InputStyleClone; removalTimeout: ReturnType<typeof setTimeout> }
-  >();
-
-  /**
-   * Get the clone for an input, reusing an existing one if possible. Existing clones are deleted if not used, so it's
-   * important that we always call this method instead of storing a reference to the clone. The clone is completely
-   * private so we don't need to worry about consumers doing this incorrectly.
-   */
-  static #getStyleCloneFor(input: InputElement) {
-    const existing = this.#cloneRegistry.get(input);
-
-    let instance: InputStyleClone;
-    if (existing) {
-      clearTimeout(existing.removalTimeout);
-      instance = existing.instance;
-    } else {
-      instance = new InputStyleClone(input);
-    }
-
-    this.#cloneRegistry.set(input, {
-      instance,
-      removalTimeout: setTimeout(() => {
-        // Delete from map before detaching to avoid race conditions where another call grabs the clone we are detaching
-        //this.#cloneRegistry.delete(input);
-        //instance.detach();
-      }, InputRange.#CLONE_USAGE_TIMEOUT),
-    });
-
-    return instance;
   }
 }
