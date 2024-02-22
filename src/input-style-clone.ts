@@ -1,7 +1,7 @@
 export type InputElement = HTMLTextAreaElement | HTMLInputElement;
 
 /**
- * Create a `div` that exactly matches an input element in all but position.
+ * Create a `div` that exactly matches an input element and automatically stays in sync with it.
  *
  * PRIOR ART: This approach & code was adapted from the following MIT-licensed sources:
  * - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
@@ -28,11 +28,7 @@ export class InputStyleClone {
   constructor(input: InputElement) {
     this.#inputRef = new WeakRef(input);
 
-    const cloneContainer = document.createElement("div");
-    // Important not to use display:none which would not render the content
-    cloneContainer.style.visibility = "hidden";
-    // We need a container because position:absolute is not compatible with display:table-cell which is used for single-line input clones
-    cloneContainer.style.position = "absolute";
+    const cloneContainer = InputStyleClone.#createContainerElement();
     document.body.appendChild(cloneContainer);
 
     const clone = document.createElement("div");
@@ -94,6 +90,15 @@ export class InputStyleClone {
   }
 
   // --- private ---
+
+  static #createContainerElement() {
+    const element = document.createElement("div");
+    // Important not to use display:none which would not render the content
+    element.style.visibility = "hidden";
+    // We need a container because position:absolute is not compatible with display:table-cell which is used for single-line input clones
+    element.style.position = "absolute";
+    return element;
+  }
 
   get #inputElement() {
     return this.#inputRef.deref();
