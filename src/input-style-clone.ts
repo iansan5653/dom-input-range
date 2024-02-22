@@ -28,7 +28,7 @@ const CloneRegistry = new WeakMap<
  */
 export class InputStyleClone extends EventTarget {
   #styleObserver = new MutationObserver(() => this.#updateStyles());
-  #resizeObserver = new ResizeObserver(() => this.#updateLayout());
+  #resizeObserver = new ResizeObserver(() => this.#requestUpdateLayout());
 
   // This class is unique in that it will prevent itself from getting garbage collected because of the subscribed
   // observers (if never detached). Because of this, we want to avoid preventing the existence of this class from also
@@ -189,6 +189,16 @@ export class InputStyleClone extends EventTarget {
     this.dispatchEvent(new InputStyleCloneUpdateEvent());
   }
 
+  #isLayoutUpdating = false;
+  #requestUpdateLayout() {
+    if (this.#isLayoutUpdating) return;
+    this.#isLayoutUpdating = true;
+    requestAnimationFrame(() => {
+      this.#updateLayout();
+      this.#isLayoutUpdating = false;
+    });
+  }
+
   #updateStyles() {
     const clone = this.#cloneElement;
     const input = this.#inputElement;
@@ -198,7 +208,7 @@ export class InputStyleClone extends EventTarget {
 
     for (const prop of propertiesToCopy) clone.style[prop] = inputStyle[prop];
 
-    this.#updateLayout();
+    this.#requestUpdateLayout();
   }
 
   #updateText() {
@@ -219,7 +229,7 @@ export class InputStyleClone extends EventTarget {
         event.target === window ||
         (event.target instanceof Node && event.target.contains(this.#inputElement)))
     )
-      this.#updateLayout();
+      this.#requestUpdateLayout();
   };
 }
 
