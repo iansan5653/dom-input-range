@@ -1,6 +1,6 @@
-import { type InputElement, InputStyleClone } from "./input-style-clone.js";
+import { type InputElement, InputStyleCloneElement } from "./input-style-clone-element.js";
 
-export type { InputElement } from "./input-style-clone.js";
+export type { InputElement } from "./input-style-clone-element.js";
 
 /**
  * A fragment of a document that can contain only pieces of a single text node. Does not implement `Range` methods
@@ -138,18 +138,18 @@ export class InputRange implements ReadonlyTextRange {
    * Get the underlying `InputStyleClone` instance powering these calculations. This can be used to listen for
    * updates to trigger layout recalculation.
    */
-  getStyleClone(): InputStyleClone {
+  getStyleClone(): InputStyleCloneElement {
     return this.#styleClone;
   }
 
   // --- private ---
 
   get #styleClone() {
-    return InputStyleClone.for(this.#inputElement);
+    return InputStyleCloneElement.for(this.#inputElement);
   }
 
   get #cloneElement() {
-    return this.#styleClone.cloneElement;
+    return this.#styleClone;
   }
 
   #clampOffset(offset: number) {

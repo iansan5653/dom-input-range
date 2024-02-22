@@ -1,5 +1,5 @@
 import { InputRange } from "../../src/input-range.js";
-import { InputStyleClone } from "../../src/input-style-clone.js";
+import { InputStyleCloneElement } from "../../src/input-style-clone-element.js";
 
 const inputs = document.querySelectorAll<HTMLTextAreaElement | HTMLInputElement>(".caret-input");
 
@@ -50,5 +50,5 @@ for (const input of inputs) {
   // mouseup for dragging
   input.addEventListener("mouseup", () => setTimeout(() => updateIndicator()));
   input.addEventListener("blur", () => hideIndicator());
-  InputStyleClone.for(input).addEventListener("update", () => updateIndicator());
+  InputStyleCloneElement.for(input).addEventListener("update", () => updateIndicator());
 }

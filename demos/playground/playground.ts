@@ -1,5 +1,5 @@
 import { InputRange } from "../../src/input-range.js";
-import { InputStyleClone } from "../../src/input-style-clone.js";
+import { InputStyleCloneElement } from "../../src/input-style-clone-element.js";
 
 const textInput = document.getElementById("input") as HTMLTextAreaElement;
 const startOffsetInput = document.getElementById("start") as HTMLInputElement;
@@ -57,6 +57,6 @@ function draw() {
 
 draw();
 
-InputStyleClone.for(textInput).addEventListener("update", () => draw());
-InputStyleClone.for(startOffsetInput).addEventListener("update", () => draw());
-InputStyleClone.for(endOffsetInput).addEventListener("update", () => draw());
+InputStyleCloneElement.for(textInput).addEventListener("update", () => draw());
+InputStyleCloneElement.for(startOffsetInput).addEventListener("update", () => draw());
+InputStyleCloneElement.for(endOffsetInput).addEventListener("update", () => draw());

@@ -1,2 +1,2 @@
 export * from "./input-range.js";
-export * from "./input-style-clone.js";
+export * from "./input-style-clone-element.js";

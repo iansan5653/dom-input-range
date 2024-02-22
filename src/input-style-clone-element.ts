@@ -6,7 +6,7 @@ export class InputStyleCloneUpdateEvent extends Event {
   }
 }
 
-const CloneRegistry = new WeakMap<InputElement, InputStyleClone>();
+const CloneRegistry = new WeakMap<InputElement, InputStyleCloneElement>();
 
 /**
  * Create an element that exactly matches an input and automatically stays in sync with it.
@@ -21,7 +21,7 @@ const CloneRegistry = new WeakMap<InputElement, InputStyleClone>();
  * - koddsson/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/koddsson/textarea-caret-position/blob/eba40ec8488eed4d77815f109af22e1d9c0751d3/index.js
  * - component/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/component/textarea-caret-position/blob/b5db7a7e47dd149c2a66276183c69234e4dabe30/index.js
  */
-export class InputStyleClone extends EventTarget {
+export class InputStyleCloneElement extends HTMLElement {
   #styleObserver = new MutationObserver(() => this.#updateStyles());
   #resizeObserver = new ResizeObserver(() => this.#requestUpdateLayout());
 
@@ -30,12 +30,7 @@ export class InputStyleClone extends EventTarget {
   // preventing the garbage collection of the associated input. This also allows us to automatically detach if the
   // input gets collected.
   #inputRef: WeakRef<InputElement>;
-
-  // There's no need to store the div in a weakref because once we auto-detach based on the input, this will get
-  // released as the class itself gets garbage collected.
-  #cloneElement: HTMLDivElement;
-
-  isDetached = false;
+  #container: HTMLDivElement;
 
   /**
    * Get the clone for an input, reusing an existing one if possible. Existing clones are deleted if not used, so it's
@@ -43,20 +38,47 @@ export class InputStyleClone extends EventTarget {
    * private so we don't need to worry about consumers doing this incorrectly.
    */
   static for(input: InputElement) {
-    const clone = CloneRegistry.get(input) ?? new InputStyleClone(input);
+    const clone = CloneRegistry.get(input) ?? new InputStyleCloneElement(input);
     CloneRegistry.set(input, clone);
     return clone;
   }
 
-  private constructor(input: InputElement) {
+  constructor(input: InputElement) {
     super();
 
     this.#inputRef = new WeakRef(input);
 
-    const clone = InputStyleClone.#createCloneElement(input instanceof HTMLTextAreaElement);
-    input.after(clone);
+    // We want position:absolute so it doesn't take space in the layout, but that doesn't work with display:table-cell
+    // used in the HTMLInputElement approach. So we need a wrapper.
+    this.#container = document.createElement("div");
+    this.#container.style.position = "absolute";
+    input.after(this.#container);
+    this.#container.appendChild(this);
+  }
 
-    this.#cloneElement = clone;
+  connectedCallback() {
+    const input = this.#inputElement;
+    if (!input) return this.remove();
+
+    this.style.pointerEvents = "none";
+    this.style.userSelect = "none";
+    this.style.overflow = "hidden";
+    this.style.display = "block";
+
+    // Important not to use display:none which would not render the content at all
+    this.style.visibility = "hidden";
+
+    if (input instanceof HTMLTextAreaElement) {
+      this.style.whiteSpace = "pre-wrap";
+      this.style.wordWrap = "break-word";
+    } else {
+      this.style.whiteSpace = "nowrap";
+      // text in single-line inputs is vertically centered
+      this.style.display = "table-cell";
+      this.style.verticalAlign = "middle";
+    }
+
+    this.setAttribute("aria-hidden", "true");
 
     this.#updateStyles();
     this.#updateText();
@@ -71,17 +93,18 @@ export class InputStyleClone extends EventTarget {
     input.addEventListener("input", this.#onInput);
   }
 
-  get cloneElement() {
-    return this.#cloneElement;
-  }
-
-  detach() {
+  disconnectedCallback() {
+    this.#container.remove();
     this.#styleObserver.disconnect();
     this.#resizeObserver.disconnect();
     document.removeEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
     window.removeEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
-    this.#inputElement?.removeEventListener("input", this.#onInput, true);
-    this.isDetached = true;
+
+    const input = this.#inputElement;
+    if (input) {
+      input.removeEventListener("input", this.#onInput);
+      CloneRegistry.delete(input);
+    }
   }
 
   /** Force a recalculation. Will emit an `update` event. */
@@ -92,34 +115,14 @@ export class InputStyleClone extends EventTarget {
 
   // --- private ---
 
-  static #createCloneElement(targetIsTextarea: boolean) {
-    const element = document.createElement("div");
-
-    element.style.pointerEvents = "none";
-    element.style.userSelect = "none";
-    element.style.overflow = "hidden";
-    element.style.position = "absolute";
-
-    // Important not to use display:none which would not render the content at all
-    element.style.visibility = "hidden";
-
-    if (targetIsTextarea) {
-      element.style.whiteSpace = "pre-wrap";
-      element.style.wordWrap = "break-word";
-    } else {
-      element.style.whiteSpace = "nowrap";
-      // text in single-line inputs is vertically centered
-      element.style.display = "table-cell";
-      element.style.verticalAlign = "middle";
-    }
-
-    element.setAttribute("aria-hidden", "true");
-
-    return element;
-  }
-
   get #inputElement() {
     return this.#inputRef.deref();
+  }
+
+  #usingInput<T>(fn: (input: InputElement) => T | void) {
+    const input = this.#inputElement;
+    if (!input) return this.remove();
+    return fn(input);
   }
 
   #xOffset = 0;
@@ -127,38 +130,38 @@ export class InputStyleClone extends EventTarget {
 
   /** Update only geometric properties without recalculating styles. */
   #updateLayout() {
-    const clone = this.#cloneElement;
-    const input = this.#inputElement;
-    if (!input) return;
+    this.#usingInput((input) => {
+      const inputStyle = window.getComputedStyle(input);
 
-    const inputStyle = window.getComputedStyle(input);
+      this.style.height = inputStyle.height;
+      this.style.width = inputStyle.width;
 
-    clone.style.height = inputStyle.height;
-    clone.style.width = inputStyle.width;
+      // Immediately re-adjust for browser inconsistencies in scrollbar handling, if necessary
+      this.style.height = `calc(${inputStyle.height} + ${input.clientHeight - this.clientHeight}px)`;
+      this.style.width = `calc(${inputStyle.width} + ${input.clientWidth - this.clientWidth}px)`;
 
-    // Immediately re-adjust for browser inconsistencies in scrollbar handling, if necessary
-    clone.style.height = `calc(${inputStyle.height} + ${input.clientHeight - clone.clientHeight}px)`;
-    clone.style.width = `calc(${inputStyle.width} + ${input.clientWidth - clone.clientWidth}px)`;
+      // Position on top of the input
+      const inputRect = input.getBoundingClientRect();
+      const cloneRect = this.getBoundingClientRect();
 
-    // Position on top of the input
-    const inputRect = input.getBoundingClientRect();
-    const cloneRect = clone.getBoundingClientRect();
+      this.#xOffset = this.#xOffset + inputRect.left - cloneRect.left;
+      this.#yOffset = this.#yOffset + inputRect.top - cloneRect.top;
 
-    this.#xOffset = this.#xOffset + inputRect.left - cloneRect.left;
-    this.#yOffset = this.#yOffset + inputRect.top - cloneRect.top;
+      this.style.transform = `translate(${this.#xOffset}px, ${this.#yOffset}px)`;
 
-    clone.style.transform = `translate(${this.#xOffset}px, ${this.#yOffset}px)`;
+      this.scrollTop = input.scrollTop;
+      this.scrollLeft = input.scrollLeft;
 
-    this.#cloneElement.scrollTop = input.scrollTop;
-    this.#cloneElement.scrollLeft = input.scrollLeft;
-
-    this.dispatchEvent(new InputStyleCloneUpdateEvent());
+      this.dispatchEvent(new InputStyleCloneUpdateEvent());
+    });
   }
 
   #isLayoutUpdating = false;
+
   #requestUpdateLayout() {
     if (this.#isLayoutUpdating) return;
     this.#isLayoutUpdating = true;
+
     requestAnimationFrame(() => {
       this.#updateLayout();
       this.#isLayoutUpdating = false;
@@ -166,36 +169,35 @@ export class InputStyleClone extends EventTarget {
   }
 
   #updateStyles() {
-    const clone = this.#cloneElement;
-    const input = this.#inputElement;
-    if (!input) return;
+    this.#usingInput((input) => {
+      const inputStyle = window.getComputedStyle(input);
 
-    const inputStyle = window.getComputedStyle(input);
+      for (const prop of propertiesToCopy) this.style[prop] = inputStyle[prop];
 
-    for (const prop of propertiesToCopy) clone.style[prop] = inputStyle[prop];
-
-    this.#requestUpdateLayout();
+      this.#requestUpdateLayout();
+    });
   }
 
   #updateText() {
-    // Original code replaced spaces with NBSP (`\u00a0`) but this seems unecessary if we have word-wrap: nowrap
-    this.#cloneElement.textContent = this.#inputElement?.value ?? "";
+    this.#usingInput((input) => {
+      this.textContent = input.value;
 
-    // No need to update layout; if the text causes a scroll it will trigger a layout change via event listener
-    this.dispatchEvent(new InputStyleCloneUpdateEvent());
+      // No need to update layout; if the text causes a scroll it will trigger a layout change via event listener
+      this.dispatchEvent(new InputStyleCloneUpdateEvent());
+    });
   }
 
   #onInput = () => this.#updateText();
 
   #onDocumentScrollOrResize = (event: Event) => {
-    console.log(event.target);
-    if (
-      this.#inputElement &&
-      (event.target === document ||
+    this.#usingInput((input) => {
+      if (
+        event.target === document ||
         event.target === window ||
-        (event.target instanceof Node && event.target.contains(this.#inputElement)))
-    )
-      this.#requestUpdateLayout();
+        (event.target instanceof Node && event.target.contains(input))
+      )
+        this.#requestUpdateLayout();
+    });
   };
 }
 
@@ -238,3 +240,5 @@ const propertiesToCopy = [
   "tabSize",
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
+
+customElements.define("input-style-clone", InputStyleCloneElement);
