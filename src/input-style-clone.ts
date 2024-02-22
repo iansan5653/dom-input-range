@@ -31,7 +31,7 @@ export class InputStyleClone {
     const cloneContainer = InputStyleClone.#createContainerElement();
     document.body.appendChild(cloneContainer);
 
-    const clone = document.createElement("div");
+    const clone = InputStyleClone.#createCloneElement(input instanceof HTMLTextAreaElement);
     cloneContainer.appendChild(clone);
 
     this.#cloneContainer = cloneContainer;
@@ -93,10 +93,30 @@ export class InputStyleClone {
 
   static #createContainerElement() {
     const element = document.createElement("div");
-    // Important not to use display:none which would not render the content
-    element.style.visibility = "hidden";
     // We need a container because position:absolute is not compatible with display:table-cell which is used for single-line input clones
     element.style.position = "absolute";
+    return element;
+  }
+
+  static #createCloneElement(targetIsTextarea: boolean) {
+    const element = document.createElement("div");
+
+    element.style.pointerEvents = "none";
+    element.style.userSelect = "none";
+
+    // Important not to use display:none which would not render the content at all
+    element.style.visibility = "hidden";
+
+    if (targetIsTextarea) {
+      element.style.whiteSpace = "pre-wrap";
+      element.style.wordWrap = "break-word";
+    } else {
+      element.style.whiteSpace = "nowrap";
+      // text in single-line inputs is vertically centered
+      element.style.display = "table-cell";
+      element.style.verticalAlign = "middle";
+    }
+
     return element;
   }
 
@@ -116,16 +136,6 @@ export class InputStyleClone {
     const isInput = input instanceof HTMLInputElement;
 
     const isFirefox = "mozInnerScreenX" in window;
-
-    if (isInput) {
-      style.whiteSpace = "nowrap";
-      // text in single-line inputs is vertically centered
-      style.display = "table-cell";
-      style.verticalAlign = "middle";
-    } else {
-      style.whiteSpace = "pre-wrap";
-      style.wordWrap = "break-word";
-    }
 
     // Transfer the element's properties to the div
     for (const prop of propertiesToCopy)
