@@ -1,6 +1,6 @@
 {
   "name": "dom-input-range",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Range-like API for input and textarea contents",
   "scripts": {
     "prepack": "npm run build",
