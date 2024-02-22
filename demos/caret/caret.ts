@@ -1,5 +1,5 @@
 import { InputRange } from "../../src/index.js";
-import {InputStyleClone} from "../../src/input-style-clone.js";
+import { InputStyleClone } from "../../src/input-style-clone.js";
 
 const inputs = document.querySelectorAll<HTMLTextAreaElement | HTMLInputElement>(".caret-input");
 
@@ -40,5 +40,15 @@ function updateIndicator() {
 }
 
 for (const input of inputs) {
-  InputStyleClone.for(input).addEventListener('update', updateIndicator)
+  input.addEventListener("focus", () => updateIndicator());
+  // if we call it immediately the caret won't have moved yet
+  input.addEventListener("keydown", () => setTimeout(() => updateIndicator()));
+  // even though we do keydown, input is required for other input events like pasting
+  input.addEventListener("input", () => updateIndicator());
+  // mousedown instead of click to make it feel faster
+  input.addEventListener("mousedown", () => setTimeout(() => updateIndicator()));
+  // mouseup for dragging
+  input.addEventListener("mouseup", () => setTimeout(() => updateIndicator()));
+  input.addEventListener("blur", () => hideIndicator());
+  InputStyleClone.for(input).addEventListener("update", () => updateIndicator());
 }
