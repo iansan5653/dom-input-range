@@ -1,4 +1,4 @@
-import { InputRange } from "../../src/index.js";
+import { InputRange } from "../../src/input-range.js";
 import { InputStyleClone } from "../../src/input-style-clone.js";
 
 const inputs = document.querySelectorAll<HTMLTextAreaElement | HTMLInputElement>(".caret-input");
