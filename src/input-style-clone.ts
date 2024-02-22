@@ -1,14 +1,22 @@
 export type InputElement = HTMLTextAreaElement | HTMLInputElement;
 
+export class InputStyleCloneUpdateEvent extends Event {
+  constructor() {
+    super("update");
+  }
+}
+
 /**
  * Create a `div` that exactly matches an input element and automatically stays in sync with it.
+ *
+ * Emits `update` events whenever anything is recalculated: when the layout changes, when the user scrolls, etc.
  *
  * PRIOR ART: This approach & code was adapted from the following MIT-licensed sources:
  * - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
  * - koddsson/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/koddsson/textarea-caret-position/blob/eba40ec8488eed4d77815f109af22e1d9c0751d3/index.js
  * - component/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/component/textarea-caret-position/blob/b5db7a7e47dd149c2a66276183c69234e4dabe30/index.js
  */
-export class InputStyleClone {
+export class InputStyleClone extends EventTarget {
   #mutationObserver = new MutationObserver(() => this.#updateStyles());
   #resizeObserver = new ResizeObserver(() => this.#updateLayout());
 
@@ -26,6 +34,8 @@ export class InputStyleClone {
   isDetached = false;
 
   constructor(input: InputElement) {
+    super();
+
     this.#inputRef = new WeakRef(input);
 
     const cloneContainer = InputStyleClone.#createContainerElement();
@@ -107,6 +117,8 @@ export class InputStyleClone {
 
     this.#cloneElement.scrollTop = input.scrollTop;
     this.#cloneElement.scrollLeft = input.scrollLeft;
+
+    this.dispatchEvent(new InputStyleCloneUpdateEvent());
   };
 
   #xOffset = 0;
