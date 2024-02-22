@@ -43,6 +43,7 @@ export class InputStyleCloneElement extends HTMLElement {
     return clone;
   }
 
+  /** Avoid constructing directly: Use `InputStyleCloneElement.for` instead. */
   constructor(input: InputElement) {
     super();
 
