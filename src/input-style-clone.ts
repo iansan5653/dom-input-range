@@ -10,7 +10,7 @@ export type InputElement = HTMLTextAreaElement | HTMLInputElement;
  */
 export class InputStyleClone {
   #mutationObserver = new MutationObserver(() => this.#updateStyles());
-  #resizeObserver = new ResizeObserver(() => this.#updateStyles());
+  #resizeObserver = new ResizeObserver(() => this.#updateLayout());
 
   // This class is unique in that it will prevent itself from getting garbage collected because of the subscribed
   // observers (if never detached). Because of this, we want to avoid preventing the existence of this class from also
@@ -125,6 +125,23 @@ export class InputStyleClone {
     return this.#inputRef.deref();
   }
 
+  /** Update only geometric properties without recalculating styles. */
+  #updateLayout() {
+    const clone = this.#cloneElement;
+    const input = this.#inputElement;
+
+    if (!input) return;
+
+    const inputStyle = window.getComputedStyle(input);
+
+    clone.style.height = inputStyle.height;
+    clone.style.width = inputStyle.width;
+
+    // Immediately re-adjust for browser inconsistencies in scrollbar handling, if necessary
+    clone.style.height = `calc(${inputStyle.height} + ${input.clientHeight - clone.clientHeight}px)`;
+    clone.style.width = `calc(${inputStyle.width} + ${input.clientWidth - clone.clientWidth}px)`;
+  }
+
   #updateStyles() {
     const clone = this.#cloneElement;
     const input = this.#inputElement;
@@ -134,17 +151,6 @@ export class InputStyleClone {
     const inputStyle = window.getComputedStyle(input);
 
     for (const prop of propertiesToCopy) clone.style[prop] = inputStyle[prop];
-
-    clone.style.height = inputStyle.height;
-    clone.style.width = inputStyle.width;
-
-    // Immediately re-adjust for browser inconsistencies in scrollbar handling, if necessary
-    clone.style.height = `calc(${inputStyle.height} + ${
-      input.clientHeight - clone.clientHeight
-    }px)`;
-    clone.style.width = `calc(${inputStyle.width} + ${
-      input.clientWidth - clone.clientWidth
-    }px)`;
   }
 
   #updateText() {
