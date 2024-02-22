@@ -1,4 +1,3 @@
-import { DOMRectListLike } from "./dom-rect-list-like.js";
 import { type InputElement, InputStyleClone } from "./input-style-clone.js";
 
 export type { InputElement } from "./input-style-clone.js";
