@@ -6,12 +6,7 @@ export class InputStyleCloneUpdateEvent extends Event {
   }
 }
 
-const CLONE_USAGE_TIMEOUT = 5_000;
-
-const CloneRegistry = new WeakMap<
-  InputElement,
-  { instance: InputStyleClone; removalTimeout: ReturnType<typeof setTimeout> }
->();
+const CloneRegistry = new WeakMap<InputElement, InputStyleClone>();
 
 /**
  * Create an element that exactly matches an input and automatically stays in sync with it.
@@ -38,7 +33,6 @@ export class InputStyleClone extends EventTarget {
 
   // There's no need to store the div in a weakref because once we auto-detach based on the input, this will get
   // released as the class itself gets garbage collected.
-  #cloneContainer: HTMLDivElement;
   #cloneElement: HTMLDivElement;
 
   isDetached = false;
@@ -49,26 +43,9 @@ export class InputStyleClone extends EventTarget {
    * private so we don't need to worry about consumers doing this incorrectly.
    */
   static for(input: InputElement) {
-    const existing = CloneRegistry.get(input);
-
-    let instance: InputStyleClone;
-    if (existing) {
-      clearTimeout(existing.removalTimeout);
-      instance = existing.instance;
-    } else {
-      instance = new InputStyleClone(input);
-    }
-
-    CloneRegistry.set(input, {
-      instance,
-      removalTimeout: setTimeout(() => {
-        // Delete from map before detaching to avoid race conditions where another call grabs the clone we are detaching
-        //this.#cloneRegistry.delete(input);
-        //instance.detach();
-      }, CLONE_USAGE_TIMEOUT),
-    });
-
-    return instance;
+    const clone = CloneRegistry.get(input) ?? new InputStyleClone(input);
+    CloneRegistry.set(input, clone);
+    return clone;
   }
 
   private constructor(input: InputElement) {
@@ -76,13 +53,9 @@ export class InputStyleClone extends EventTarget {
 
     this.#inputRef = new WeakRef(input);
 
-    const cloneContainer = InputStyleClone.#createContainerElement();
-    input.after(cloneContainer);
-
     const clone = InputStyleClone.#createCloneElement(input instanceof HTMLTextAreaElement);
-    cloneContainer.appendChild(clone);
+    input.after(clone);
 
-    this.#cloneContainer = cloneContainer;
     this.#cloneElement = clone;
 
     this.#updateStyles();
@@ -105,7 +78,6 @@ export class InputStyleClone extends EventTarget {
   detach() {
     this.#styleObserver.disconnect();
     this.#resizeObserver.disconnect();
-    this.#cloneContainer.remove();
     document.removeEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
     window.removeEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
     this.#inputElement?.removeEventListener("input", this.#onInput, true);
@@ -120,19 +92,13 @@ export class InputStyleClone extends EventTarget {
 
   // --- private ---
 
-  static #createContainerElement() {
-    const element = document.createElement("div");
-    // We need a container because position:absolute is not compatible with display:table-cell which is used for single-line input clones
-    element.style.position = "absolute";
-    return element;
-  }
-
   static #createCloneElement(targetIsTextarea: boolean) {
     const element = document.createElement("div");
 
     element.style.pointerEvents = "none";
     element.style.userSelect = "none";
     element.style.overflow = "hidden";
+    element.style.position = "absolute";
 
     // Important not to use display:none which would not render the content at all
     element.style.visibility = "hidden";
