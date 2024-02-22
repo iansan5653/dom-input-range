@@ -118,12 +118,7 @@ export class InputRange implements ReadonlyTextRange {
    * @see https://iansan5653.github.io/dom-input-range/demos/playground/
    */
   getBoundingClientRect(): DOMRect {
-    const range = this.#createCloneRange();
-
-    const cloneRect = range.getBoundingClientRect();
-    const offsetRect = this.#styleClone.offsetCloneRect(cloneRect);
-
-    return offsetRect;
+    return this.#createCloneRange().getBoundingClientRect();
   }
 
   /**
@@ -132,12 +127,7 @@ export class InputRange implements ReadonlyTextRange {
    * @see https://iansan5653.github.io/dom-input-range/demos/playground/
    */
   getClientRects(): DOMRectList {
-    const range = this.#createCloneRange();
-
-    const cloneRects = Array.from(range.getClientRects());
-    const offsetRects = cloneRects.map((domRect) => this.#styleClone.offsetCloneRect(domRect));
-
-    return new DOMRectListLike(...offsetRects);
+    return this.#createCloneRange().getClientRects();
   }
 
   /** Get the contents of the range as a string. */

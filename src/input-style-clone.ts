@@ -29,7 +29,7 @@ export class InputStyleClone {
     this.#inputRef = new WeakRef(input);
 
     const cloneContainer = InputStyleClone.#createContainerElement();
-    document.body.appendChild(cloneContainer);
+    input.after(cloneContainer);
 
     const clone = InputStyleClone.#createCloneElement(input instanceof HTMLTextAreaElement);
     cloneContainer.appendChild(clone);
@@ -43,6 +43,7 @@ export class InputStyleClone {
       attributeFilter: ["style"],
     });
     this.#resizeObserver.observe(input);
+    input.addEventListener("scroll", this.#updateScroll, true);
   }
 
   get cloneElement() {
@@ -58,35 +59,8 @@ export class InputStyleClone {
     this.#mutationObserver.disconnect();
     this.#resizeObserver.disconnect();
     this.#cloneContainer.remove();
+    this.#inputElement?.removeEventListener("scroll", this.#updateScroll, true);
     this.isDetached = true;
-  }
-
-  /**
-   * Return a copy of the passed rect, adjusted to match the position of the input element.
-   * Returns null if the input element is no longer available.
-   */
-  offsetCloneRect(rect: DOMRect) {
-    const cloneElement = this.#cloneElement;
-    const inputElement = this.#inputElement;
-
-    // Mimic browser behavior by returning a 0-rect if the element is not present
-    if (!inputElement) return new DOMRect();
-
-    const cloneRect = cloneElement.getBoundingClientRect();
-    const inputRect = inputElement.getBoundingClientRect();
-
-    // The div is not scrollable so it does not have scroll adjustment built in
-    const inputScroll = {
-      top: inputElement.scrollTop,
-      left: inputElement.scrollLeft,
-    };
-
-    return new DOMRect(
-      rect.left - cloneRect.left + inputRect.left - inputScroll.left,
-      rect.top - cloneRect.top + inputRect.top - inputScroll.top,
-      rect.width,
-      rect.height,
-    );
   }
 
   // --- private ---
@@ -118,6 +92,8 @@ export class InputStyleClone {
       element.style.verticalAlign = "middle";
     }
 
+    element.setAttribute("aria-hidden", "true");
+
     return element;
   }
 
@@ -125,11 +101,21 @@ export class InputStyleClone {
     return this.#inputRef.deref();
   }
 
+  #updateScroll = () => {
+    const input = this.#inputElement;
+    if (!input) return;
+
+    this.#cloneElement.scrollTop = input.scrollTop;
+    this.#cloneElement.scrollLeft = input.scrollLeft;
+  };
+
+  #xOffset = 0;
+  #yOffset = 0;
+
   /** Update only geometric properties without recalculating styles. */
   #updateLayout() {
     const clone = this.#cloneElement;
     const input = this.#inputElement;
-
     if (!input) return;
 
     const inputStyle = window.getComputedStyle(input);
@@ -140,17 +126,29 @@ export class InputStyleClone {
     // Immediately re-adjust for browser inconsistencies in scrollbar handling, if necessary
     clone.style.height = `calc(${inputStyle.height} + ${input.clientHeight - clone.clientHeight}px)`;
     clone.style.width = `calc(${inputStyle.width} + ${input.clientWidth - clone.clientWidth}px)`;
+
+    // Position on top of the input
+    const inputRect = input.getBoundingClientRect();
+    const cloneRect = clone.getBoundingClientRect();
+
+    this.#xOffset = this.#xOffset + inputRect.left - cloneRect.left;
+    this.#yOffset = this.#yOffset + inputRect.top - cloneRect.top;
+
+    clone.style.transform = `translate(${this.#xOffset}px, ${this.#yOffset}px)`;
+
+    this.#updateScroll();
   }
 
   #updateStyles() {
     const clone = this.#cloneElement;
     const input = this.#inputElement;
-
     if (!input) return;
 
     const inputStyle = window.getComputedStyle(input);
 
     for (const prop of propertiesToCopy) clone.style[prop] = inputStyle[prop];
+
+    this.#updateLayout();
   }
 
   #updateText() {
