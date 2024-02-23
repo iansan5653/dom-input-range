@@ -9,18 +9,22 @@ export class InputStyleCloneUpdateEvent extends Event {
 const CloneRegistry = new WeakMap<InputElement, InputStyleCloneElement>();
 
 /**
- * Create an element that exactly matches an input and automatically stays in sync with it.
+ * Create an element that exactly matches an input pixel-for-pixel and automatically stays in sync with it. This
+ * is a non-interactive overlay on to the input and can be used to affect the visual appearance of the input
+ * without modifying its behavior. The clone element is hidden by default.
+ *
+ * This lower level API powers the `InputRange` but provides more advanced functionality including event updates.
  *
  * Emits `update` events whenever anything is recalculated: when the layout changes, when the user scrolls, when the
  * input is updated, etc. This event may be emitted more than once per change.
  *
  * NOTE! This class will not auto update if `input.value` is set directly!
  *
- * PRIOR ART: This approach & code was adapted from the following MIT-licensed sources:
- * - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
- * - koddsson/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/koddsson/textarea-caret-position/blob/eba40ec8488eed4d77815f109af22e1d9c0751d3/index.js
- * - component/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/component/textarea-caret-position/blob/b5db7a7e47dd149c2a66276183c69234e4dabe30/index.js
  */
+// PRIOR ART: This approach was adapted from the following MIT-licensed sources:
+//  - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
+//  - component/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/component/textarea-caret-position/blob/b5db7a7e47dd149c2a66276183c69234e4dabe30/index.js
+//  - koddsson/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/koddsson/textarea-caret-position/blob/eba40ec8488eed4d77815f109af22e1d9c0751d3/index.js
 export class InputStyleCloneElement extends HTMLElement {
   #styleObserver = new MutationObserver(() => this.#updateStyles());
   #resizeObserver = new ResizeObserver(() => this.#requestUpdateLayout());
@@ -33,9 +37,9 @@ export class InputStyleCloneElement extends HTMLElement {
   #container: HTMLDivElement;
 
   /**
-   * Get the clone for an input, reusing an existing one if possible. Existing clones are deleted if not used, so it's
-   * important that we always call this method instead of storing a reference to the clone. The clone is completely
-   * private so we don't need to worry about consumers doing this incorrectly.
+   * Get the clone for an input, reusing an existing one if available. This avoids creating unecessary clones, which
+   * have a performance cost due to their high-frequency event-based updates. Because these elements are shared, they
+   * should NOT be mutated directly.
    */
   static for(input: InputElement) {
     const clone = CloneRegistry.get(input) ?? new InputStyleCloneElement(input);
@@ -57,6 +61,16 @@ export class InputStyleCloneElement extends HTMLElement {
     this.#container.appendChild(this);
   }
 
+  /**
+   * Force a recalculation. Will emit an `update` event. This is typically not needed unless the input has changed in
+   * an unobservable way, eg by directly writing to the `value` property.
+   */
+  forceUpdate() {
+    this.#updateStyles();
+    this.#updateText();
+  }
+
+  /** @private */
   connectedCallback() {
     const input = this.#inputElement;
     if (!input) return this.remove();
@@ -94,6 +108,7 @@ export class InputStyleCloneElement extends HTMLElement {
     input.addEventListener("input", this.#onInput);
   }
 
+  /** @private */
   disconnectedCallback() {
     this.#container.remove();
     this.#styleObserver.disconnect();
@@ -106,12 +121,6 @@ export class InputStyleCloneElement extends HTMLElement {
       input.removeEventListener("input", this.#onInput);
       CloneRegistry.delete(input);
     }
-  }
-
-  /** Force a recalculation. Will emit an `update` event. */
-  forceUpdate() {
-    this.#updateStyles();
-    this.#updateText();
   }
 
   // --- private ---
