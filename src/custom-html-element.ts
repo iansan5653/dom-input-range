@@ -9,12 +9,22 @@ export abstract class CustomHTMLElement extends HTMLElement {
    * Called each time the element is added to the document. The specification
    * recommends that, as far as possible, developers should implement custom
    * element setup in this callback rather than the constructor.
+   * @private
    */
   connectedCallback?(): void;
-  /** Called each time the element is removed from the document. */
+  /**
+   * Called each time the element is removed from the document.
+   * @private
+   */
   disconnectedCallback?(): void;
-  /** Called each time the element is moved to a new document. */
+  /**
+   * Called each time the element is moved to a new document.
+   * @private
+   */
   adoptedCallback?(): void;
-  /** Called when attributes are changed, added, removed, or replaced. */
+  /**
+   * Called when attributes are changed, added, removed, or replaced.
+   * @private
+   */
   attributeChangedCallback?(): void;
 }
