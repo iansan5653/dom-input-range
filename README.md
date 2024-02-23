@@ -51,10 +51,10 @@ This API is focused on providing an intuitive way to obtain the coordinates of t
 
 ## Implementation and performance considerations
 
-Behind the scenes, `InputRange` works by creating a `<div>` that copies all of the styling and contents from the input element. This 'clone' is then appended to the document and hidden from view so it can be queried. This is adapted from the approach taken in the [`textarea-caret`](https://github.com/koddsson/textarea-caret-position) utility.
+Behind the scenes, `InputRange` works by creating a 'clone' element that copies all of the styling and contents from the input element. This clone is then appended to the document and hidden from view so it can be queried. This low-level API is exposed as [`InputStyleCloneElement`](https://iansan5653.github.io/dom-input-range/classes/InputStyleCloneElement.html) for advanced use cases.
 
 Mounting a new element and copying styles can have a real performance impact, and this API has been carefully designed to minimize that. The clone element is only created once per input element, and is reused for all subsequent queries — even if new `InputRange` instances are constructed. The clone element is automatically discarded after it is not queried for a while.
 
 There is practically no overhead to constructing new `InputRange` instances - whether or not you reuse them is entirely up to what best fits with your usage.
 
-The result of this is that the consumer should typically not need to consider performance. If you do notice any performance problems, please [create a new issue](https://github.com/iansan5653/dom-input-range/issues).
+If you do notice any performance issues, please [create a new issue](https://github.com/iansan5653/dom-input-range/issues).
