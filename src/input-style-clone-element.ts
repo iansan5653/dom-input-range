@@ -68,6 +68,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     this.#container = document.createElement("div");
     this.#container.style.position = "absolute";
     input.after(this.#container);
+    this.style.pointerEvents = "none";
     this.#container.appendChild(this);
   }
 
@@ -215,7 +216,9 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 
       // This is often unecessary on a pure text update, but text updates could potentially cause layout updates like
       // scrolling or resizing. And we run the update on _every frame_ when scrolling, so this isn't that expensive.
-      this.#requestUpdateLayout();
+      // We don't requestUpdateLayout here because this one should happen synchronously, so that clients can react
+      // within their own `input` event handlers.
+      this.#updateLayout();
     });
   }
 
