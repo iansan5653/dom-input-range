@@ -116,7 +116,8 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 
     document.addEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
     window.addEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
-    input.addEventListener("input", this.#onInput);
+    // capture so this happens first, so other things can respond to `input` events after this data updates
+    input.addEventListener("input", this.#onInput, { capture: true });
   }
 
   /** @private */
@@ -129,7 +130,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 
     const input = this.#inputRef.deref();
     if (input) {
-      input.removeEventListener("input", this.#onInput);
+      input.removeEventListener("input", this.#onInput, { capture: true });
       CloneRegistry.delete(input);
     }
   }
