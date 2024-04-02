@@ -67,8 +67,8 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     // used in the HTMLInputElement approach. So we need a wrapper.
     this.#container = document.createElement("div");
     this.#container.style.position = "absolute";
+    this.#container.style.pointerEvents = "none";
     input.after(this.#container);
-    this.style.pointerEvents = "none";
     this.#container.appendChild(this);
   }
 
