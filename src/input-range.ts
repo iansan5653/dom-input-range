@@ -131,7 +131,7 @@ export class InputRange implements ReadonlyTextRange {
 
   /** Get the contents of the range as a string. */
   toString(): string {
-    return this.#createCloneRange.toString();
+    return this.#createCloneRange().toString();
   }
 
   /**
