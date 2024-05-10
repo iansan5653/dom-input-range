@@ -110,7 +110,10 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     this.#updateText();
 
     this.#styleObserver.observe(input, {
-      attributeFilter: ["style"],
+      attributeFilter: [
+        "style",
+        "dir", // users can right-click in some browsers to change the text direction dynamically
+      ],
     });
     this.#resizeObserver.observe(input);
 
