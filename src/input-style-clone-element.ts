@@ -110,7 +110,10 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     this.#updateText();
 
     this.#styleObserver.observe(input, {
-      attributeFilter: ["style"],
+      attributeFilter: [
+        "style",
+        "dir", // users can right-click in some browsers to change the text direction dynamically
+      ],
     });
     this.#resizeObserver.observe(input);
 
@@ -241,7 +244,12 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
 // so we have to list every single property explicitly.
 const propertiesToCopy = [
-  "direction", // RTL support
+  // RTL / vertical writing modes support:
+  "direction",
+  "writingMode",
+  "unicodeBidi",
+  "textOrientation",
+
   "boxSizing",
 
   "borderTopWidth",
