@@ -244,7 +244,12 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 // into their shorthand (e.g. padding-top, padding-bottom etc. -> padding),
 // so we have to list every single property explicitly.
 const propertiesToCopy = [
-  "direction", // RTL support
+  // RTL / vertical writing modes support:
+  "direction",
+  "writingMode",
+  "unicodeBidi",
+  "textOrientation",
+
   "boxSizing",
 
   "borderTopWidth",
