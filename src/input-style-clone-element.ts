@@ -285,4 +285,11 @@ const propertiesToCopy = [
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
 
-customElements.define("input-style-clone", InputStyleCloneElement);
+// Inspired by https://github.com/github/catalyst/blob/dc284dcf4f82329a9cac5c867462a8fa529b6c40/src/register.ts
+
+try {
+  customElements.define("input-style-clone", InputStyleCloneElement);
+} catch (e: unknown) {
+  // Throws DOMException with NotSupportedError if already defined
+  if (!(e instanceof DOMException && e.name === "NotSupportedError")) throw e;
+}
