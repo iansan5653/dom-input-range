@@ -36,8 +36,8 @@ export class InputStyleCloneElement extends CustomHTMLElement {
   // observers (if never detached). Because of this, we want to avoid preventing the existence of this class from also
   // preventing the garbage collection of the associated input. This also allows us to automatically detach if the
   // input gets collected.
-  #inputRef: WeakRef<InputElement>;
-  #container: HTMLDivElement;
+  #inputRef?: WeakRef<InputElement>;
+  #container?: HTMLDivElement;
 
   /**
    * Get the clone for an input, reusing an existing one if available. This avoids creating unecessary clones, which
@@ -49,18 +49,18 @@ export class InputStyleCloneElement extends CustomHTMLElement {
    * @param input The target input to clone.
    */
   static for(input: InputElement) {
-    const clone = CloneRegistry.get(input) ?? new InputStyleCloneElement(input);
-    CloneRegistry.set(input, clone);
+    let clone = CloneRegistry.get(input);
+
+    if (!clone) {
+      clone = new InputStyleCloneElement();
+      clone.connect(input);
+      CloneRegistry.set(input, clone);
+    }
+
     return clone;
   }
 
-  /**
-   * Avoid constructing directly: Use `InputStyleCloneElement.for` instead.
-   * @private
-   */
-  constructor(input: InputElement) {
-    super();
-
+  connect(input: InputElement) {
     this.#inputRef = new WeakRef(input);
 
     // We want position:absolute so it doesn't take space in the layout, but that doesn't work with display:table-cell
@@ -83,55 +83,55 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 
   /** @private */
   connectedCallback() {
-    const input = this.#inputRef.deref();
-    if (!input) return this.remove();
+    this.#usingInput((input) => {
+      this.style.pointerEvents = "none";
+      this.style.userSelect = "none";
+      this.style.overflow = "hidden";
+      this.style.display = "block";
 
-    this.style.pointerEvents = "none";
-    this.style.userSelect = "none";
-    this.style.overflow = "hidden";
-    this.style.display = "block";
+      // Important not to use display:none which would not render the content at all
+      this.style.visibility = "hidden";
 
-    // Important not to use display:none which would not render the content at all
-    this.style.visibility = "hidden";
+      if (input instanceof HTMLTextAreaElement) {
+        this.style.whiteSpace = "pre-wrap";
+        this.style.wordWrap = "break-word";
+      } else {
+        this.style.whiteSpace = "nowrap";
+        // text in single-line inputs is vertically centered
+        this.style.display = "table-cell";
+        this.style.verticalAlign = "middle";
+      }
 
-    if (input instanceof HTMLTextAreaElement) {
-      this.style.whiteSpace = "pre-wrap";
-      this.style.wordWrap = "break-word";
-    } else {
-      this.style.whiteSpace = "nowrap";
-      // text in single-line inputs is vertically centered
-      this.style.display = "table-cell";
-      this.style.verticalAlign = "middle";
-    }
+      this.setAttribute("aria-hidden", "true");
 
-    this.setAttribute("aria-hidden", "true");
+      this.#updateStyles();
+      this.#updateText();
 
-    this.#updateStyles();
-    this.#updateText();
+      this.#styleObserver.observe(input, {
+        attributeFilter: [
+          "style",
+          "dir", // users can right-click in some browsers to change the text direction dynamically
+        ],
+      });
+      this.#resizeObserver.observe(input);
 
-    this.#styleObserver.observe(input, {
-      attributeFilter: [
-        "style",
-        "dir", // users can right-click in some browsers to change the text direction dynamically
-      ],
+      document.addEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
+      window.addEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
+      // capture so this happens first, so other things can respond to `input` events after this data updates
+      input.addEventListener("input", this.#onInput, { capture: true });
     });
-    this.#resizeObserver.observe(input);
-
-    document.addEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
-    window.addEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
-    // capture so this happens first, so other things can respond to `input` events after this data updates
-    input.addEventListener("input", this.#onInput, { capture: true });
   }
 
   /** @private */
   disconnectedCallback() {
-    this.#container.remove();
+    this.#container?.remove();
     this.#styleObserver.disconnect();
     this.#resizeObserver.disconnect();
     document.removeEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
     window.removeEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
 
-    const input = this.#inputRef.deref();
+    // Can't use `usingInput` here since that could infinitely recurse
+    const input = this.#input;
     if (input) {
       input.removeEventListener("input", this.#onInput, { capture: true });
       CloneRegistry.delete(input);
@@ -140,9 +140,13 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 
   // --- private ---
 
+  get #input() {
+    return this.#inputRef?.deref();
+  }
+
   /** Perform `fn` using the `input` if it is still available. If not, clean up the clone instead. */
   #usingInput<T>(fn: (input: InputElement) => T | void) {
-    const input = this.#inputRef.deref();
+    const input = this.#input;
     if (!input) return this.remove();
     return fn(input);
   }
