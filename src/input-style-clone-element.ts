@@ -62,7 +62,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
 
   /**
    * Connect this instance to a target input element and insert this instance into the DOM in the correct location.
-   * 
+   *
    * NOTE: calling the static `for` method is nearly always preferable as it will reuse an existing clone if available.
    * However, if reusing clones is problematic (ie, if the clone needs to be mutated), a clone can be constructed
    * directly with `new InputStyleCloneElement()` and then bound to an input and inserted into the DOM with
