@@ -1,5 +1,5 @@
 import { InputRange } from "../../src/input-range.js";
-import { InputStyleCloneElement } from "../../src/input-style-clone-element.js";
+import { InputStyleClone } from "../../src/input-style-clone.js";
 
 const inputs = document.querySelectorAll<HTMLTextAreaElement | HTMLInputElement>(".words-input");
 
@@ -47,7 +47,7 @@ function createHighlights() {
 createHighlights();
 
 for (const input of inputs)
-  InputStyleCloneElement.for(input).addEventListener("update", () => {
+  InputStyleClone.for(input).addEventListener("update", () => {
     // use a timeout to let the input change first
     setTimeout(() => {
       clearHighlights();

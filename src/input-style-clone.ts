@@ -1,5 +1,3 @@
-import { CustomHTMLElement } from "./custom-html-element.js";
-
 export type InputElement = HTMLTextAreaElement | HTMLInputElement;
 
 export class InputStyleCloneUpdateEvent extends Event {
@@ -8,10 +6,10 @@ export class InputStyleCloneUpdateEvent extends Event {
   }
 }
 
-const CloneRegistry = new WeakMap<InputElement, InputStyleCloneElement>();
+const CloneRegistry = new WeakMap<InputElement, InputStyleClone>();
 
 /**
- * Create an element that exactly matches an input pixel-for-pixel and automatically stays in sync with it. This
+ * Creates an element that exactly matches an input pixel-for-pixel and automatically stays in sync with it. This
  * is a non-interactive overlay on to the input and can be used to affect the visual appearance of the input
  * without modifying its behavior. The clone element is hidden by default.
  *
@@ -28,7 +26,7 @@ const CloneRegistry = new WeakMap<InputElement, InputStyleCloneElement>();
 //  - primer/react (Copyright (c) 2018 GitHub, Inc.): https://github.com/primer/react/blob/a0db832302702b869aa22b0c4049ad9305ef631f/src/drafts/utils/character-coordinates.ts
 //  - component/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/component/textarea-caret-position/blob/b5db7a7e47dd149c2a66276183c69234e4dabe30/index.js
 //  - koddsson/textarea-caret-position (Copyright (c) 2015 Jonathan Ong me@jongleberry.com): https://github.com/koddsson/textarea-caret-position/blob/eba40ec8488eed4d77815f109af22e1d9c0751d3/index.js
-export class InputStyleCloneElement extends CustomHTMLElement {
+export class InputStyleClone extends EventTarget {
   #styleObserver = new MutationObserver(() => this.#updateStyles());
   #resizeObserver = new ResizeObserver(() => this.#requestUpdateLayout());
 
@@ -37,23 +35,23 @@ export class InputStyleCloneElement extends CustomHTMLElement {
   // preventing the garbage collection of the associated input. This also allows us to automatically detach if the
   // input gets collected.
   #inputRef?: WeakRef<InputElement>;
-  #container?: HTMLDivElement;
+  #container = document.createElement("div");
+  #cloneElement = document.createElement("div");
 
   /**
    * Get the clone for an input, reusing an existing one if available. This avoids creating unecessary clones, which
    * have a performance cost due to their high-frequency event-based updates. Because these elements are shared, they
-   * should be mutated with caution.
+   * should be mutated with caution. If you're planning to mutate the clone, consider constructing a new one instead.
    *
    * Upon initial creation the clone element will automatically be inserted into the DOM and begin observing the
-   * linked input. Only one clone per input can ever exist at a time.
+   * linked input.
    * @param input The target input to clone.
    */
   static for(input: InputElement) {
     let clone = CloneRegistry.get(input);
 
     if (!clone) {
-      clone = new InputStyleCloneElement();
-      clone.connect(input);
+      clone = new InputStyleClone(input);
       CloneRegistry.set(input, clone);
     }
 
@@ -63,21 +61,63 @@ export class InputStyleCloneElement extends CustomHTMLElement {
   /**
    * Connect this instance to a target input element and insert this instance into the DOM in the correct location.
    *
-   * NOTE: calling the static `for` method is nearly always preferable as it will reuse an existing clone if available.
+   * NOTE: calling the static `for` method is usually preferable as it will reuse an existing clone if available.
    * However, if reusing clones is problematic (ie, if the clone needs to be mutated), a clone can be constructed
-   * directly with `new InputStyleCloneElement()` and then bound to an input and inserted into the DOM with
-   * `clone.connect(target)`.
+   * directly with `new InputStyleClone(target)`.
    */
-  connect(input: InputElement) {
+  constructor(input: InputElement) {
+    super();
+
     this.#inputRef = new WeakRef(input);
 
     // We want position:absolute so it doesn't take space in the layout, but that doesn't work with display:table-cell
     // used in the HTMLInputElement approach. So we need a wrapper.
-    this.#container = document.createElement("div");
     this.#container.style.position = "absolute";
     this.#container.style.pointerEvents = "none";
+    this.#container.setAttribute("aria-hidden", "true");
+
+    this.#container.appendChild(this.#cloneElement);
+
+    this.#cloneElement.style.pointerEvents = "none";
+    this.#cloneElement.style.userSelect = "none";
+    this.#cloneElement.style.overflow = "hidden";
+    this.#cloneElement.style.display = "block";
+
+    // Important not to use display:none which would not render the content at all
+    this.#cloneElement.style.visibility = "hidden";
+
+    if (input instanceof HTMLTextAreaElement) {
+      this.#cloneElement.style.whiteSpace = "pre-wrap";
+      this.#cloneElement.style.wordWrap = "break-word";
+    } else {
+      this.#cloneElement.style.whiteSpace = "nowrap";
+      // text in single-line inputs is vertically centered
+      this.#cloneElement.style.display = "table-cell";
+      this.#cloneElement.style.verticalAlign = "middle";
+    }
+
     input.after(this.#container);
-    this.#container.appendChild(this);
+
+    this.#updateStyles();
+    this.#updateText();
+
+    this.#styleObserver.observe(input, {
+      attributeFilter: [
+        "style",
+        "dir", // users can right-click in some browsers to change the text direction dynamically
+      ],
+    });
+    this.#resizeObserver.observe(input);
+
+    document.addEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
+    window.addEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
+    // capture so this happens first, so other things can respond to `input` events after this data updates
+    input.addEventListener("input", this.#onInput, { capture: true });
+  }
+
+  /** Get the clone element. */
+  get element() {
+    return this.#cloneElement;
   }
 
   /**
@@ -89,49 +129,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     this.#updateText();
   }
 
-  /** @private */
-  connectedCallback() {
-    this.#usingInput((input) => {
-      this.style.pointerEvents = "none";
-      this.style.userSelect = "none";
-      this.style.overflow = "hidden";
-      this.style.display = "block";
-
-      // Important not to use display:none which would not render the content at all
-      this.style.visibility = "hidden";
-
-      if (input instanceof HTMLTextAreaElement) {
-        this.style.whiteSpace = "pre-wrap";
-        this.style.wordWrap = "break-word";
-      } else {
-        this.style.whiteSpace = "nowrap";
-        // text in single-line inputs is vertically centered
-        this.style.display = "table-cell";
-        this.style.verticalAlign = "middle";
-      }
-
-      this.setAttribute("aria-hidden", "true");
-
-      this.#updateStyles();
-      this.#updateText();
-
-      this.#styleObserver.observe(input, {
-        attributeFilter: [
-          "style",
-          "dir", // users can right-click in some browsers to change the text direction dynamically
-        ],
-      });
-      this.#resizeObserver.observe(input);
-
-      document.addEventListener("scroll", this.#onDocumentScrollOrResize, { capture: true });
-      window.addEventListener("resize", this.#onDocumentScrollOrResize, { capture: true });
-      // capture so this happens first, so other things can respond to `input` events after this data updates
-      input.addEventListener("input", this.#onInput, { capture: true });
-    });
-  }
-
-  /** @private */
-  disconnectedCallback() {
+  disconnect() {
     this.#container?.remove();
     this.#styleObserver.disconnect();
     this.#resizeObserver.disconnect();
@@ -155,7 +153,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
   /** Perform `fn` using the `input` if it is still available. If not, clean up the clone instead. */
   #usingInput<T>(fn: (input: InputElement) => T | void) {
     const input = this.#input;
-    if (!input) return this.remove();
+    if (!input) return this.disconnect();
     return fn(input);
   }
 
@@ -173,26 +171,30 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     this.#usingInput((input) => {
       const inputStyle = window.getComputedStyle(input);
 
-      this.style.height = inputStyle.height;
-      this.style.width = inputStyle.width;
+      this.#cloneElement.style.height = inputStyle.height;
+      this.#cloneElement.style.width = inputStyle.width;
 
       // Immediately re-adjust for browser inconsistencies in scrollbar handling, if necessary
-      if (input.clientHeight !== this.clientHeight)
-        this.style.height = `calc(${inputStyle.height} + ${input.clientHeight - this.clientHeight}px)`;
-      if (input.clientWidth !== this.clientWidth)
-        this.style.width = `calc(${inputStyle.width} + ${input.clientWidth - this.clientWidth}px)`;
+      if (input.clientHeight !== this.#cloneElement.clientHeight)
+        this.#cloneElement.style.height = `calc(${inputStyle.height} + ${
+          input.clientHeight - this.#cloneElement.clientHeight
+        }px)`;
+      if (input.clientWidth !== this.#cloneElement.clientWidth)
+        this.#cloneElement.style.width = `calc(${inputStyle.width} + ${
+          input.clientWidth - this.#cloneElement.clientWidth
+        }px)`;
 
       // Position on top of the input
       const inputRect = input.getBoundingClientRect();
-      const cloneRect = this.getBoundingClientRect();
+      const cloneRect = this.#cloneElement.getBoundingClientRect();
 
       this.#xOffset = this.#xOffset + inputRect.left - cloneRect.left;
       this.#yOffset = this.#yOffset + inputRect.top - cloneRect.top;
 
-      this.style.transform = `translate(${this.#xOffset}px, ${this.#yOffset}px)`;
+      this.#cloneElement.style.transform = `translate(${this.#xOffset}px, ${this.#yOffset}px)`;
 
-      this.scrollTop = input.scrollTop;
-      this.scrollLeft = input.scrollLeft;
+      this.#cloneElement.scrollTop = input.scrollTop;
+      this.#cloneElement.scrollLeft = input.scrollLeft;
 
       this.dispatchEvent(new InputStyleCloneUpdateEvent());
     });
@@ -216,7 +218,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
     this.#usingInput((input) => {
       const inputStyle = window.getComputedStyle(input);
 
-      for (const prop of propertiesToCopy) this.style[prop] = inputStyle[prop];
+      for (const prop of propertiesToCopy) this.#cloneElement.style[prop] = inputStyle[prop];
 
       this.#requestUpdateLayout();
     });
@@ -228,7 +230,7 @@ export class InputStyleCloneElement extends CustomHTMLElement {
    */
   #updateText() {
     this.#usingInput((input) => {
-      this.textContent = input.value;
+      this.#cloneElement.textContent = input.value;
 
       // This is often unecessary on a pure text update, but text updates could potentially cause layout updates like
       // scrolling or resizing. And we run the update on _every frame_ when scrolling, so this isn't that expensive.
@@ -296,12 +298,3 @@ const propertiesToCopy = [
   "tabSize",
   "MozTabSize" as "tabSize", // prefixed version for Firefox <= 52
 ] as const satisfies ReadonlyArray<keyof CSSStyleDeclaration>;
-
-// Inspired by https://github.com/github/catalyst/blob/dc284dcf4f82329a9cac5c867462a8fa529b6c40/src/register.ts
-
-try {
-  customElements.define("input-style-clone", InputStyleCloneElement);
-} catch (e: unknown) {
-  // Throws DOMException with NotSupportedError if already defined
-  if (!(e instanceof DOMException && e.name === "NotSupportedError")) throw e;
-}

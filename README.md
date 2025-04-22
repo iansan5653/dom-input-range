@@ -49,12 +49,18 @@ This API is focused on providing an intuitive way to obtain the coordinates of t
 - Two new manipulation methods are present instead: [`setStartOffset`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#setStartOffset) and [`setEndOffset`](https://iansan5653.github.io/dom-input-range/classes/InputRange.html#setEndOffset)
 - Methods that modify the range contents are not implemented - work with the input `value` directly instead
 
-## Implementation and performance considerations
+## `InputStyleClone` low-level API
 
-Behind the scenes, `InputRange` works by creating a 'clone' element that copies all of the styling and contents from the input element. This clone is then appended to the document and hidden from view so it can be queried. This low-level API is exposed as [`InputStyleCloneElement`](https://iansan5653.github.io/dom-input-range/classes/InputStyleCloneElement.html) for advanced use cases.
+Behind the scenes, `InputRange` works by creating a 'clone' element that copies all of the styling and contents from the input element. This clone is then appended to the document and hidden from view so it can be queried. This low-level API is exposed as [`InputStyleClone`](https://iansan5653.github.io/dom-input-range/classes/InputStyleClone.html) for advanced use cases:
 
-Mounting a new element and copying styles can have a real performance impact, and this API has been carefully designed to minimize that. The clone element is only created once per input element, and is reused for all subsequent queries — even if new `InputRange` instances are constructed. The clone element is automatically discarded after it is not queried for a while.
+```ts
+const clone = new InputStyleClone(input)
+clone.element.getBoundingClientRect()
+```
 
-There is practically no overhead to constructing new `InputRange` instances - whether or not you reuse them is entirely up to what best fits with your usage.
+Mounting a new element and copying styles can have a real performance impact, and this API has been carefully designed to minimize that. You can use `InputStyleClone.for` to share a single default clone instance for the lifetime of an input, **if you only plan to query and not mutate the clone element**:
 
-If you do notice any performance issues, please [create a new issue](https://github.com/iansan5653/dom-input-range/issues).
+```ts
+const sharedClone = InputStyleClone.for(input)
+clone.element.getBoundingClientRect()
+```
