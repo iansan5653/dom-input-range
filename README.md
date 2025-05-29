@@ -54,13 +54,13 @@ This API is focused on providing an intuitive way to obtain the coordinates of t
 Behind the scenes, `InputRange` works by creating a 'clone' element that copies all of the styling and contents from the input element. This clone is then appended to the document and hidden from view so it can be queried. This low-level API is exposed as [`InputStyleClone`](https://iansan5653.github.io/dom-input-range/classes/InputStyleClone.html) for advanced use cases:
 
 ```ts
-const clone = new InputStyleClone(input)
-clone.element.getBoundingClientRect()
+const clone = new InputStyleClone(input);
+clone.element.getBoundingClientRect();
 ```
 
 Mounting a new element and copying styles can have a real performance impact, and this API has been carefully designed to minimize that. You can use `InputStyleClone.for` to share a single default clone instance for the lifetime of an input, **if you only plan to query and not mutate the clone element**:
 
 ```ts
-const sharedClone = InputStyleClone.for(input)
-clone.element.getBoundingClientRect()
+const sharedClone = InputStyleClone.for(input);
+clone.element.getBoundingClientRect();
 ```
